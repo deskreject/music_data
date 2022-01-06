@@ -9,22 +9,23 @@ First cookie cutter file structure to be created on your machine if you clone an
 ├── README.md          <- The top-level README for developers using this project.
 
 ├── git.ignore         <- DON'T CHANGE: excludes junk files and /data files that are to big for git
+
 ├── data
 │   ├── interim_data   <- Intermediate data that has been transformed.
 │   ├── analyses_data  <- The final, canonical data sets for modeling.
 │   └── raw_data       <- The original, immutable data dump.
-│
+
 ├── reports            <- any written reports
-│
+
 ├── figures            <- visualizations
 |   ├── exploratory    <- any exploratory visualizations created 
 │   └── final          <- visualizations for a report
-│
+
 ├── literature         <- files with papers of interest
 |   ├── topic a        <- files with papers according to topics of papers
 |   ├── ...  
 |   └── references     <- bibtex file  
-│
+
 ├── code               <- Source code for use in this project.
 │   ├── setup_and_data <- loading data, packages and functions
 │   │
