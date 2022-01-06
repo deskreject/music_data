@@ -7,6 +7,7 @@ First cookie cutter file structure to be created on your machine if you clone an
 
 
 ├── README.md          <- The top-level README for developers using this project.
+
 ├── git.ignore         <- DON'T CHANGE: excludes junk files and /data files that are to big for git
 ├── data
 │   ├── interim_data   <- Intermediate data that has been transformed.
