@@ -37,8 +37,8 @@ First cookie cutter file structure to be created on your machine if you clone an
 ├── code               <- Source code for use in this project.
 
 │   ├── setup_and_data <- loading data, packages and functions
-
 │   │
+
 │   ├── data_creation  <- Scripts to download or generate data
 │   │
 
