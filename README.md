@@ -52,3 +52,7 @@ First cookie cutter file structure to be created on your machine if you clone an
 |   |
 
 │   └── visualizing  <- Scripts to create  visualizations
+
+## Code
+
+In the GITHUB file the code is acesssable to whoever chooses, it is necesarry to further be perfected and that autometed breaks are inserted as the rate limit of spotify sometimes is a troubelmaking companion and creates some trouble in the later parts of the code.
