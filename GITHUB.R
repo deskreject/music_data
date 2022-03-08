@@ -1,4 +1,4 @@
-#Bachelor Thesis - Maximilian Trentini Data collection
+#Bachelor Thesis - Data collection
 
 #Packages to collect data from the Spotify API
 
