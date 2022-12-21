@@ -1,0 +1,49 @@
+---
+title: "Exploration_music_data"
+format: html
+editor: visual
+author: Alexander Staub
+---
+
+## Libraries & data loading
+
+```{r message=FALSE}
+
+
+if (!require(renv)) install.packages("renv"); library(renv) # environment creator package
+if (!require(readr)) install.packages("readr"); library(readr) # reading csv files
+if (!require(tidyverse)) install.packages("tidyverse"); library(tidyverse) # tidyverse
+if (!require(here)) install.packages("here"); library(here) # relative file paths
+```
+
+Load the data from the your working directory
+
+```{r message=FALSE}
+# The chart data filepath
+
+filenames <- list.files(path = here("data", "raw_data", "hot_100"), pattern = "*.csv")
+
+filenames2 <- paste0(here("data", "raw_data", "hot_100"), "/", filenames)
+
+# reading in the file names
+
+df <-  filenames2 %>% map_df(~read_delim(., delim = "r"))
+```
+
+
+## Inspecting the data
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
