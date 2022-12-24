@@ -1,3 +1,9 @@
+#.............................
+# Author: Alexander Staub
+# Description: Explorative data analysis and visualizations
+#.............................
+
+
 #### ---------- Hot100: looking at the individual artsits ---------------#### 
 
 # aggregate the df to artist & song level
@@ -50,7 +56,7 @@ sum(df_artists_triple_relevant$count)
 # only include unique values of songs
 
 df_songs_relevant_time_period <- df %>%
-  filter(year(Week) > 1999 & year(Week) < 2005) %>%
+  filter(year(Week) >= 1999 & year(Week) < 2005) %>%
   group_by(Artist, Track) %>%
   summarise(count = n())
 
