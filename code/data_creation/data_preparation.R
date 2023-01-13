@@ -43,4 +43,5 @@ df_songs_relevant_time_period$artist_last_word <- ifelse(is.na(df_songs_relevant
 
 # Export the new df as a csv to the path "data", "processed"
 
-write.csv(df_songs_relevant_time_period, row.names=FALSE)
+write.csv(df_songs_relevant_time_period,
+          here("C:/R work/Research/music_data/data/interim_data/df_songs_relevant_time.csv"), row.names=FALSE)
