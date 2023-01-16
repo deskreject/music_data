@@ -20,7 +20,7 @@ if (!require(here)) install.packages("here"); library(here) # relative file path
 # renv::snapshot
 
 #.............
-# Loading data
+# Loading  raw data
 #.............
 
 # The chart data filepath
@@ -33,3 +33,15 @@ filenames2 <- paste0(here("data", "raw_data", "hot_100"), "/", filenames)
 
 df <-  filenames2 %>% map_df(~read_delim(., delim = "r"))
 
+# read in the csv from musicbrainz
+
+df_musicbrainz <- read.csv(here("data", "raw_data", "musicbrainz", "all_songs_artists.csv"))
+
+#.......................
+# loading processed data
+#.......................
+
+#load the hot100 df created to do the initial scrape of musicbrainz: year >= 1999, <= 2005
+
+df_hh_proc <- read.csv(here("data", "interim_data", "df_songs_relevant_time.csv")) 
+                           
