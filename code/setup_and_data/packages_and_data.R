@@ -33,9 +33,13 @@ filenames2 <- paste0(here("data", "raw_data", "hot_100"), "/", filenames)
 
 df <-  filenames2 %>% map_df(~read_delim(., delim = "r"))
 
-# read in the csv from musicbrainz
+# read in the csv from musicbrainz - no id
 
-df_musicbrainz <- read.csv(here("data", "raw_data", "musicbrainz", "all_songs_artists.csv"))
+df_musicbrainz_old <- read.csv(here("data", "raw_data", "musicbrainz", "all_songs_artists.csv"))
+
+# read in csv from musibrainz - with id
+
+df_musicbrainz <- read.csv(here("data", "raw_data", "musicbrainz", "all_songs_artists_with_id.csv"))
 
 #.......................
 # loading processed data

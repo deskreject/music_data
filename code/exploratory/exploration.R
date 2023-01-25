@@ -128,7 +128,7 @@ unique_feat_match <- unique(feat_match$Track)
 #### ----------------- Musicbrainz: checking overlap in first scrape musicbrainz and hot100 ------------------------####
 
 # remove all duplicate rows
-df_musicbrainz_distinct <- unique(df_musicbrainz[,2:3])
+df_musicbrainz_distinct <- unique(df_musicbrainz[,2:4])
 
 ## make all columns all lowercase
 # hot100
@@ -140,17 +140,19 @@ df_musicbrainz_distinct$track_lower <- tolower(df_musicbrainz_distinct$recording
 df_musicbrainz_distinct$artist_lower <- tolower(df_musicbrainz_distinct$recording.artist.credit.phrase)
 
 ##track based alterations
-# remove all special characteristics 
-df_musicbrainz_distinct$track_lower_no_schar <- gsub("[^a-zA-Z0-9 ]", " ", df_musicbrainz_distinct$track_lower)
-df_hh_proc$track_lower_no_schar <- str_replace_all(df_hh_proc$track_lower, "[^[:alnum:]]", " ")
 
 # remove all song info in brackets
 df_musicbrainz_distinct$track_lower_no_brackets <-  gsub("\\(.*\\)", "", df_musicbrainz_distinct$track_lower)
 df_hh_proc$track_lower_no_brackets <- gsub("\\(.*\\)", "", df_hh_proc$track_lower)
 
+# remove all special characteristics 
+df_musicbrainz_distinct$track_lower_no_schar <- gsub("[^a-zA-Z0-9 ]", " ", df_musicbrainz_distinct$track_lower_no_brackets)
+df_hh_proc$track_lower_no_schar <- str_replace_all(df_hh_proc$track_lower_no_brackets, "[^[:alnum:]]", " ")
+
+
 # remove all the whitespace from the no schar column in both df_s to allow for partial matches
-df_musicbrainz_distinct$track_lower_no_schar_ws <- gsub("\\s+", "", df_musicbrainz_distinct$track_lower_no_schar)
-df_hh_proc$track_lower_no_schar_ws <- gsub("\\s+", "", df_hh_proc$track_lower_no_schar)
+df_musicbrainz_distinct$track_lower_no_brackets_schar_ws <- gsub("\\s+", "", df_musicbrainz_distinct$track_lower_no_schar)
+df_hh_proc$track_lower_no_brackets_schar_ws <- gsub("\\s+", "", df_hh_proc$track_lower_no_schar)
 
 # the same, no white space but excluding anything in brackets
 df_musicbrainz_distinct$track_lower_no_brackets_ws <- gsub("\\s+", "", df_musicbrainz_distinct$track_lower_no_brackets)
@@ -160,15 +162,19 @@ df_hh_proc$track_lower_no_brackets_ws <- gsub("\\s+", "", df_hh_proc$track_lower
 
 #remove the bracket info from names
 df_musicbrainz_distinct$artist_lower_no_bracket <- gsub("\\(.*\\)", "", df_musicbrainz_distinct$artist_lower)
-df_hh_proc$track_lower_no_brackets <- gsub("\\(.*\\)", "", df_hh_proc$artist_lower)
+df_hh_proc$artist_lower_no_brackets <- gsub("\\(.*\\)", "", df_hh_proc$artist_lower)
 
 #remove the special characteristics
 df_musicbrainz_distinct$artist_lower_no_bracket_schar <- gsub("[^[:alnum:]]", "", df_musicbrainz_distinct$artist_lower_no_bracket)
-df_hh_proc$track_lower_no_brackets_schar <- gsub("[^[:alnum:]]", "", df_hh_proc$track_lower_no_brackets)
+df_hh_proc$artist_lower_no_brackets_schar <- gsub("[^[:alnum:]]", "", df_hh_proc$artist_lower_no_brackets)
 
 #remove any white space
 df_musicbrainz_distinct$artist_lower_no_bracket_schar_ws <- gsub("\\s+", "", df_musicbrainz_distinct$artist_lower_no_bracket_schar)
-df_hh_proc$track_lower_no_brackets_schar_ws <- gsub("\\s+", "", df_hh_proc$track_lower_no_brackets_schar)
+df_hh_proc$artist_lower_no_brackets_schar_ws <- gsub("\\s+", "", df_hh_proc$artist_lower_no_brackets_schar)
+
+# artist column where all feat is replaced with featuring
+
+
 
 # Combine the track and artist columns into one column
 df_musicbrainz_distinct$tracks_artists <- paste(df_musicbrainz_distinct$track_lower_no_brackets_ws,
@@ -200,26 +206,21 @@ hot100_nomatch_titles_noschar <- df_hh_proc %>% anti_join(df_musicbrainz_distinc
 hot100_nomatch_titles_nobrackets <- df_hh_proc %>% anti_join(df_musicbrainz_distinct, by = "track_lower_no_brackets")
 
 #antijoin no brackets, special characters and white space
+## best one, 49 hits
 
+hot100_nomatch_titles_no_brackets_schar_ws <- df_hh_proc %>% anti_join(df_musicbrainz_distinct, by = "track_lower_no_brackets_schar_ws")
 
+#..................
+# partial matching
+#.................
 
-# try with substring matching the song title
-## version 1
-hot100_nomatch_titles_partial <- anti_join(df_hh_proc,
-                                               df_musicbrainz_distinct,
-                                               by = c("track_lower_no_schar" = "track_lower_no_schar")) %>%
-  filter(!str_detect(track_lower_no_schar,
-                     paste(df_musicbrainz_distinct$track_lower_no_schar, collapse = "|")))
-
-
-
-
-## version 2 - try to deal with "na na na" not matching to "na na na na"
+# version 2, same as above - try to deal with "na na na" not matching to "na na na na"
 hot100_nomatch_titles_partial_2 <-  anti_join(df_hh_proc, df_musicbrainz_distinct,
-                                              by = "track_lower_no_schar_ws",
+                                              by = "track_lower_no_brackets_schar_ws",
                                               match = "partial")
 
-## version 3 - try to deal with "nanana" not matching to "nananana" using the fuzzyjoin package
+# version 3 - try to deal with "nanana" not matching to "nananana" using the fuzzyjoin package
+## results in matches that aren't real matches ("gone" matched to "one")
 
 if (!require(fuzzyjoin)) install.packages("fuzzyjoin"); library(fuzzyjoin) # relative file paths
 
@@ -229,32 +230,11 @@ hot100_nomatch_titles_partial_3 <- stringdist_left_join(df_hh_proc,
                                   method = "lv", distance_col = "distance",max_dist = 2) %>%
   filter(is.na(distance)) %>% select(-distance)
 
-## version 4 - the above, but without the bracket text
-hot100_nomatch_titles_partial_4 <- stringdist_left_join(df_hh_proc,
-                                                        df_musicbrainz_distinct,
-                                                        by = c("track_lower_no_brackets_ws" = "track_lower_no_brackets_ws"), 
-                                                        method = "lv", distance_col = "distance",max_dist = 2) %>%
-  filter(is.na(distance)) %>% select(-distance)
-
-
-## version 5 - the above, but with the artist + track combination
-
-hot100_nomatch_titles_partial_5 <- stringdist_left_join(df_hh_proc,
-                                                        df_musicbrainz_distinct,
-                                                        by = c("tracks_artists" = "tracks_artists"), 
-                                                        method = "lv", distance_col = "distance",max_dist = 5) %>%
-  filter(is.na(distance)) %>% select(-distance)
-
 
 #save the dataframe
-write.csv(hot100_nomatch_titles_partial_4,
-          here("C:/R work/Research/music_data/data/interim_data/hot100_nomatch_titles_partial.csv"),
+write.csv(hot100_nomatch_titles_no_brackets_schar_ws,
+          here("C:/R work/Research/music_data/data/interim_data/hot100_nomatch_titles_no_brackets_schar_ws.csv"),
           row.names=FALSE)
-
-write.csv(hot100_nomatch_titles_partial_5,
-          here("C:/R work/Research/music_data/data/interim_data/hot100_nomatch_titles_artists_partial.csv"),
-          row.names=FALSE)
-          
 
 
 
@@ -262,16 +242,10 @@ write.csv(hot100_nomatch_titles_partial_5,
 # merging the tables to contain the info from both tables
 #.........................................................
 
+## not suitable, matches are not great
 # merging the tables using fuzzy_join
-
-df_hh_and_mb_songs <- stringdist_left_join(df_hh_proc,
-                                     df_musicbrainz_distinct,
-                                     by = c("track_lower_no_brackets_ws" = "track_lower_no_brackets_ws"), 
-                                     method = "lv",
-                                     distance_col = "distance",
-                                     max_dist = 2)
-
 # need to combin the two columns of names and track to make the join
+
 
 df_hh_and_mb_songs_artists <- stringdist_left_join(df_hh_proc,
                                      df_musicbrainz_distinct,
@@ -280,11 +254,67 @@ df_hh_and_mb_songs_artists <- stringdist_left_join(df_hh_proc,
                                      distance_col = "distance",
                                      max_dist = 5)
 
+
+# leftjoin of the two tables
+df_hh_and_mb_songs_left <- left_join(df_hh_proc,
+                                df_musicbrainz_distinct,
+                                by = "track_lower_no_brackets_schar_ws")
+
+# full join
+df_hh_and_mb_songs_full <- full_join(df_hh_proc,
+                                     df_musicbrainz_distinct,
+                                     by = "track_lower_no_brackets_schar_ws")
+
+# clean up the dataframes above
+
+# variable definition
+var_relevance <- c("Artist",
+                   "Track", 
+                   "recording.artist.credit.phrase",
+                   "recording.title",
+                   "track_lower.y",
+                   "track_lower.x",
+                   "artist_lower.y",
+                   "artist_lower.x",
+                   "track_lower_no_brackets_schar_ws",
+                   "recording.id")
+
+# left join
+
+df_hh_and_mb_leftjoin_clean <- df_hh_and_mb_songs_left %>%
+  dplyr::select(all_of(var_relevance))
+
+# full join
+
+df_hh_and_mb_fulljoin_clean <- df_hh_and_mb_songs_full %>%
+  dplyr::select(all_of(var_relevance))
+
+
+
+# the NAs from hot100
+HH_NAs <- df_hh_and_mb_leftjoin_clean %>%
+  filter(is.na(recording.title) == T)
+
+#the NAs from the musicbrainz
+MB_NAs <- df_hh_and_mb_fulljoin_clean %>%
+  filter(is.na(Track) == T)
+
+
+
 #save the dataframe
-write.csv(df_hh_and_mb_songs,
-          here("C:/R work/Research/music_data/data/interim_data/hot100_joined_titles_partial.csv"),
+write.csv(df_hh_and_mb_leftjoin_clean,
+          here("C:/R work/Research/music_data/data/interim_data/df_hh_and_mb_leftjoin_clean.csv"),
           row.names=FALSE)
 
-write.csv(df_hh_and_mb_songs_artists,
-          here("C:/R work/Research/music_data/data/interim_data/hot100_joined_titles_artists_partial.csv"),
+write.csv(df_hh_and_mb_fulljoin_clean,
+          here("C:/R work/Research/music_data/data/interim_data/df_hh_and_mb_fulljoin_clean.csv"),
           row.names=FALSE)
+
+write.csv(HH_NAs,
+          here("C:/R work/Research/music_data/data/interim_data/HH_NAs.csv"),
+          row.names=FALSE)
+
+write.csv(df_hh_and_mb_fulljoin_clean,
+          here("C:/R work/Research/music_data/data/interim_data/MB_NAs.csv"),
+          row.names=FALSE)
+
