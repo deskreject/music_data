@@ -23,19 +23,17 @@ if (!require(here)) install.packages("here"); library(here) # relative file path
 # Loading  raw data
 #.............
 
-# The chart data filepath
+# The chart data filepath - takes forever, do with caution
 
-filenames <- list.files(path = here("data", "raw_data", "hot_100"), pattern = "*.csv")
+  # filenames <- list.files(path = here("data", "raw_data", "hot_100"), pattern = "*.csv")
 
-filenames2 <- paste0(here("data", "raw_data", "hot_100"), "/", filenames)
+   #filenames2 <- paste0(here("data", "raw_data", "hot_100"), "/", filenames)
 
 # reading in the file names
 
-df <-  filenames2 %>% map_df(~read_delim(., delim = "r"))
+  # df <-  filenames2 %>% map_df(~read_delim(., delim = "r"))
 
-# read in the csv from musicbrainz - no id
 
-df_musicbrainz_old <- read.csv(here("data", "raw_data", "musicbrainz", "all_songs_artists.csv"))
 
 # read in csv from musibrainz - with id
 

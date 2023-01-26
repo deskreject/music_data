@@ -125,7 +125,7 @@ feat_match <- df[grepl("Feat", df$Artist),]
 unique_feat_match <- unique(feat_match$Track)
 
 
-#### ----------------- Musicbrainz: checking overlap in first scrape musicbrainz and hot100 ------------------------####
+#### ----------------- Musicbrainz #1: checking overlap in first scrape musicbrainz and hot100 ------------------------####
 
 # remove all duplicate rows
 df_musicbrainz_distinct <- unique(df_musicbrainz[,2:4])
@@ -210,19 +210,16 @@ hot100_nomatch_titles_nobrackets <- df_hh_proc %>% anti_join(df_musicbrainz_dist
 
 hot100_nomatch_titles_no_brackets_schar_ws <- df_hh_proc %>% anti_join(df_musicbrainz_distinct, by = "track_lower_no_brackets_schar_ws")
 
+#### ----------------- joined_df #1: creating left joined dataset (and full join) ------------------------####
+
 #..................
 # partial matching
 #.................
 
-# version 2, same as above - try to deal with "na na na" not matching to "na na na na"
-hot100_nomatch_titles_partial_2 <-  anti_join(df_hh_proc, df_musicbrainz_distinct,
-                                              by = "track_lower_no_brackets_schar_ws",
-                                              match = "partial")
-
 # version 3 - try to deal with "nanana" not matching to "nananana" using the fuzzyjoin package
 ## results in matches that aren't real matches ("gone" matched to "one")
 
-if (!require(fuzzyjoin)) install.packages("fuzzyjoin"); library(fuzzyjoin) # relative file paths
+if (!require(fuzzyjoin)) install.packages("fuzzyjoin"); library(fuzzyjoin) 
 
 hot100_nomatch_titles_partial_3 <- stringdist_left_join(df_hh_proc,
                                                         df_musicbrainz_distinct,
@@ -289,32 +286,49 @@ df_hh_and_mb_leftjoin_clean <- df_hh_and_mb_songs_left %>%
 df_hh_and_mb_fulljoin_clean <- df_hh_and_mb_songs_full %>%
   dplyr::select(all_of(var_relevance))
 
+# for both of the above, there are matches on songs with the same name but with different artists.
+
+# do the first and last word adjustments
+
+df_hh_and_mb_leftjoin_clean <- df_hh_and_mb_leftjoin_clean %>%
+  mutate(artist_lower_first.x = str_extract(artist_lower.x,"\\b\\w+\\b"),
+         artist_lower_first.y = str_extract(artist_lower.y, "\\b\\w+\\b"),
+         artist_last_word.x = str_extract(artist_lower.x, "\\b\\w+\\b$"),
+         artist_last_word.y = str_extract(artist_lower.y, "\\b\\w+\\b$"))
+
+# make sure that the match is based on the artist last word is present in the artsit of mb and beyonce matches to beyoncé
+
+if (!require(stringi)) install.packages("stringi"); library(stringi)
+
+df_hh_and_mb_leftjoin_clean_distinct <- df_hh_and_mb_leftjoin_clean %>% 
+  group_by(artist_last_word.x) %>% 
+  mutate(artist_last_word.y_trans = stri_trans_general(artist_last_word.y, "latin-ascii")) %>%
+  filter(grepl(artist_last_word.x, artist_last_word.y_trans, ignore.case = TRUE))
+
+#get the new non-matching thing
+
+hot100_nomatch_titles_artists <- df_hh_proc %>% anti_join(df_hh_and_mb_leftjoin_clean_distinct, by = "track_lower_no_brackets_schar_ws")
+
+mb_nomatch_titles_artists <- df_musicbrainz_distinct %>% anti_join(df_hh_and_mb_leftjoin_clean_distinct, by = "track_lower_no_brackets_schar_ws")
+
+#compare the two
+
+intersection_nomatch <- hot100_nomatch_titles_artists %>% anti_join(hot100_nomatch_titles_artists_2, by = "track_lower_no_brackets_schar_ws")
 
 
-# the NAs from hot100
-HH_NAs <- df_hh_and_mb_leftjoin_clean %>%
-  filter(is.na(recording.title) == T)
-
-#the NAs from the musicbrainz
-MB_NAs <- df_hh_and_mb_fulljoin_clean %>%
-  filter(is.na(Track) == T)
 
 
+##### ----------------- H100 + MusicBrainz - Checking the distribution of songs and special versions of them --------------- ####
 
-#save the dataframe
-write.csv(df_hh_and_mb_leftjoin_clean,
-          here("C:/R work/Research/music_data/data/interim_data/df_hh_and_mb_leftjoin_clean.csv"),
-          row.names=FALSE)
+#create a table that shows the entries with the most duplicate matches
 
-write.csv(df_hh_and_mb_fulljoin_clean,
-          here("C:/R work/Research/music_data/data/interim_data/df_hh_and_mb_fulljoin_clean.csv"),
-          row.names=FALSE)
+frequency_table_songs_mb <- df_hh_and_mb_leftjoin_clean_distinct %>%
+  group_by(recording.title, recording.artist.credit.phrase) %>%
+  summarize(number = n()) %>%
+  arrange(desc(number))
 
-write.csv(HH_NAs,
-          here("C:/R work/Research/music_data/data/interim_data/HH_NAs.csv"),
-          row.names=FALSE)
+#### ----------------- Analyses remixes : look at the amount of "remix" in the left_joined df ------------------------####
 
-write.csv(df_hh_and_mb_fulljoin_clean,
-          here("C:/R work/Research/music_data/data/interim_data/MB_NAs.csv"),
-          row.names=FALSE)
+
+
 
