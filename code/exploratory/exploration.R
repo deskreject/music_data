@@ -145,7 +145,7 @@ df_musicbrainz_distinct$artist_lower <- tolower(df_musicbrainz_distinct$recordin
 df_musicbrainz_distinct$track_lower_no_brackets <-  gsub("\\(.*\\)", "", df_musicbrainz_distinct$track_lower)
 df_hh_proc$track_lower_no_brackets <- gsub("\\(.*\\)", "", df_hh_proc$track_lower)
 
-# remove all special characteristics 
+# remove all special characteristics from the column without brackets
 df_musicbrainz_distinct$track_lower_no_schar <- gsub("[^a-zA-Z0-9 ]", " ", df_musicbrainz_distinct$track_lower_no_brackets)
 df_hh_proc$track_lower_no_schar <- str_replace_all(df_hh_proc$track_lower_no_brackets, "[^[:alnum:]]", " ")
 
@@ -165,12 +165,16 @@ df_musicbrainz_distinct$artist_lower_no_bracket <- gsub("\\(.*\\)", "", df_music
 df_hh_proc$artist_lower_no_brackets <- gsub("\\(.*\\)", "", df_hh_proc$artist_lower)
 
 #remove the special characteristics
-df_musicbrainz_distinct$artist_lower_no_bracket_schar <- gsub("[^[:alnum:]]", "", df_musicbrainz_distinct$artist_lower_no_bracket)
-df_hh_proc$artist_lower_no_brackets_schar <- gsub("[^[:alnum:]]", "", df_hh_proc$artist_lower_no_brackets)
+df_musicbrainz_distinct$artist_lower_no_bracket_schar <- gsub("[^[:alnum:]]", " ", df_musicbrainz_distinct$artist_lower_no_bracket)
+df_hh_proc$artist_lower_no_bracket_schar <- gsub("[^[:alnum:]]", " ", df_hh_proc$artist_lower_no_brackets)
+
+#remove the white space at the end of the string
+df_musicbrainz_distinct$artist_lower_no_bracket_schar  <- trimws(df_musicbrainz_distinct$artist_lower_no_bracket_schar, which = "right")
+df_hh_proc$artist_lower_no_bracket_schar <- trimws(df_hh_proc$artist_lower_no_bracket_schar, which = "right")
 
 #remove any white space
 df_musicbrainz_distinct$artist_lower_no_bracket_schar_ws <- gsub("\\s+", "", df_musicbrainz_distinct$artist_lower_no_bracket_schar)
-df_hh_proc$artist_lower_no_brackets_schar_ws <- gsub("\\s+", "", df_hh_proc$artist_lower_no_brackets_schar)
+df_hh_proc$artist_lower_no_bracket_schar_ws <- gsub("\\s+", "", df_hh_proc$artist_lower_no_brackets_schar)
 
 # artist column where all feat is replaced with featuring
 
@@ -228,13 +232,6 @@ hot100_nomatch_titles_partial_3 <- stringdist_left_join(df_hh_proc,
   filter(is.na(distance)) %>% select(-distance)
 
 
-#save the dataframe
-write.csv(hot100_nomatch_titles_no_brackets_schar_ws,
-          here("C:/R work/Research/music_data/data/interim_data/hot100_nomatch_titles_no_brackets_schar_ws.csv"),
-          row.names=FALSE)
-
-
-
 #.........................................................
 # merging the tables to contain the info from both tables
 #.........................................................
@@ -273,6 +270,8 @@ var_relevance <- c("Artist",
                    "track_lower.x",
                    "artist_lower.y",
                    "artist_lower.x",
+                   "artist_lower_no_bracket_schar.y",
+                   "artist_lower_no_bracket_schar.x",
                    "track_lower_no_brackets_schar_ws",
                    "recording.id")
 
@@ -294,9 +293,11 @@ df_hh_and_mb_leftjoin_clean <- df_hh_and_mb_leftjoin_clean %>%
   mutate(artist_lower_first.x = str_extract(artist_lower.x,"\\b\\w+\\b"),
          artist_lower_first.y = str_extract(artist_lower.y, "\\b\\w+\\b"),
          artist_last_word.x = str_extract(artist_lower.x, "\\b\\w+\\b$"),
-         artist_last_word.y = str_extract(artist_lower.y, "\\b\\w+\\b$"))
+         artist_last_word.y = str_extract(artist_lower.y, "\\b\\w+\\b$"),
+         artist_last_word_lower_no_bracket_schar_ws.x = str_extract(artist_lower_no_bracket_schar.x,"\\b\\w+\\b$"),
+         artist_last_word_lower_no_bracket_schar_ws.y = str_extract(artist_lower_no_bracket_schar.y,"\\b\\w+\\b$"))
 
-# make sure that the match is based on the artist last word is present in the artsit of mb and beyonce matches to beyoncé
+# make sure that the match is based on the artist last word is present in the artsit of mb and beyonce matches to beyoncé - with brackets and special chars
 
 if (!require(stringi)) install.packages("stringi"); library(stringi)
 
@@ -311,11 +312,26 @@ hot100_nomatch_titles_artists <- df_hh_proc %>% anti_join(df_hh_and_mb_leftjoin_
 
 mb_nomatch_titles_artists <- df_musicbrainz_distinct %>% anti_join(df_hh_and_mb_leftjoin_clean_distinct, by = "track_lower_no_brackets_schar_ws")
 
-#compare the two
+#compare the two preferred matching specs
 
-intersection_nomatch <- hot100_nomatch_titles_artists %>% anti_join(hot100_nomatch_titles_artists_2, by = "track_lower_no_brackets_schar_ws")
+intersection_nomatch <- hot100_nomatch_titles_artists %>% anti_join(hot100_nomatch_titles_no_brackets_schar_ws, by = "track_lower_no_brackets_schar_ws")
 
+# make sure that the match is based on the artist last word is present in the artsit of mb and beyonce matches to beyoncé - no brackets and special chars
 
+df_hh_and_mb_leftjoin_clean_distinct_2 <- df_hh_and_mb_leftjoin_clean %>% 
+  group_by(artist_last_word.x) %>% 
+  mutate(artist_last_word_lower_no_bracket_schar_ws.y_trans = stri_trans_general(artist_last_word_lower_no_bracket_schar_ws.y, "latin-ascii")) %>%
+  filter(grepl(artist_last_word_lower_no_bracket_schar_ws.x, artist_last_word_lower_no_bracket_schar_ws.y_trans, ignore.case = TRUE))
+
+#get the new non-matching thing
+
+hot100_nomatch_titles_artists_2 <- df_hh_proc %>% anti_join(df_hh_and_mb_leftjoin_clean_distinct_2, by = "track_lower_no_brackets_schar_ws")
+
+mb_nomatch_titles_artists_2 <- df_musicbrainz_distinct %>% anti_join(df_hh_and_mb_leftjoin_clean_distinct_2, by = "track_lower_no_brackets_schar_ws")
+
+#compare the two preferred matching specs
+
+intersection_nomatch_2 <- hot100_nomatch_titles_artists_2 %>% anti_join(hot100_nomatch_titles_no_brackets_schar_ws, by = "track_lower_no_brackets_schar_ws")
 
 
 ##### ----------------- H100 + MusicBrainz - Checking the distribution of songs and special versions of them --------------- ####
