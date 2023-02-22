@@ -139,6 +139,10 @@ df_hh_proc$artist_lower <- tolower(df_hh_proc$Artist)
 df_musicbrainz_distinct$track_lower <- tolower(df_musicbrainz_distinct$recording.title)
 df_musicbrainz_distinct$artist_lower <- tolower(df_musicbrainz_distinct$recording.artist.credit.phrase)
 
+# Creating a new column with replaced spelling of "featuring"
+df_musicbrainz_distinct$artist_lower <- str_replace_all(df_musicbrainz_distinct$artist_lower, "(?<!\\w)(feat\\.|ft\\.|featuring)(?!\\w)", "featuring")
+df_hh_proc$artist_lower <- str_replace_all(df_hh_proc$artist_lower, "(?<!\\w)(feat\\.|ft\\.|featuring)(?!\\w)", "featuring")
+
 ##track based alterations
 
 # remove all song info in brackets
@@ -174,10 +178,7 @@ df_hh_proc$artist_lower_no_bracket_schar <- trimws(df_hh_proc$artist_lower_no_br
 
 #remove any white space
 df_musicbrainz_distinct$artist_lower_no_bracket_schar_ws <- gsub("\\s+", "", df_musicbrainz_distinct$artist_lower_no_bracket_schar)
-df_hh_proc$artist_lower_no_bracket_schar_ws <- gsub("\\s+", "", df_hh_proc$artist_lower_no_brackets_schar)
-
-# artist column where all feat is replaced with featuring
-
+df_hh_proc$artist_lower_no_bracket_schar_ws <- gsub("\\s+", "", df_hh_proc$artist_lower_no_bracket_schar)
 
 
 # Combine the track and artist columns into one column
@@ -221,15 +222,25 @@ hot100_nomatch_titles_no_brackets_schar_ws <- df_hh_proc %>% anti_join(df_musicb
 #.................
 
 # version 3 - try to deal with "nanana" not matching to "nananana" using the fuzzyjoin package
-## results in matches that aren't real matches ("gone" matched to "one")
+## results in only less matches than there are observations in MB, but there are matches without any distance - I don't understand at all
 
 if (!require(fuzzyjoin)) install.packages("fuzzyjoin"); library(fuzzyjoin) 
 
 hot100_nomatch_titles_partial_3 <- stringdist_left_join(df_hh_proc,
                                                         df_musicbrainz_distinct,
-                                                        by = c("track_lower_no_schar_ws" = "track_lower_no_schar_ws"), 
-                                  method = "lv", distance_col = "distance",max_dist = 2) %>%
-  filter(is.na(distance)) %>% select(-distance)
+                                                        by = "track_lower_no_brackets_schar_ws", 
+                                  method = "lv", distance_col = "distance",max_dist = 2) 
+
+# check the unmatched examples and by filtering by (is.na(distance))
+
+# remove all the superfluous columns - use code below
+
+# remove all observations where the "artist_last_name" doesn't match for .x and .y - use code from below
+
+# do an antijoin between df_hh_proc and the df from above to see which observations didn't match properly. Also, spotchecks
+
+# do an antijoin between the hot100_nomatch_titles_nobrackets and the new dataframe - check if the songs were erroneously matched
+
 
 
 #.........................................................
