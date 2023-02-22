@@ -12,6 +12,8 @@ if (!require(renv)) install.packages("renv"); library(renv) # environment creato
 if (!require(readr)) install.packages("readr"); library(readr) # reading csv files
 if (!require(tidyverse)) install.packages("tidyverse"); library(tidyverse) # tidyverse
 if (!require(here)) install.packages("here"); library(here) # relative file paths
+if (!require(stringr)) install.packages("stringr"); library(stringr) # string package
+
 
 # initiate r environment - only once
 # renv::init()
