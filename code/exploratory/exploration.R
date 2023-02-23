@@ -233,11 +233,56 @@ hot100_nomatch_titles_partial_3 <- stringdist_left_join(df_hh_proc,
 
 # check the unmatched examples and by filtering by (is.na(distance))
 
+hh_unmatched_fuzzy_join_song <- hot100_nomatch_titles_partial_3 %>% filter(is.na(distance) == T)
+
+write.csv(hh_unmatched_fuzzy_join_song,
+          here::here("data", "incidental", "hh_unmatched_fuzzy_join_song.csv"),
+                                          row.names = F)
+
 # remove all the superfluous columns - use code below
+
+var_relevance <- c("Artist",
+                   "Track", 
+                   "artist_last_word",
+                   "recording.artist.credit.phrase",
+                   "recording.title",
+                   "track_lower.y",
+                   "track_lower.x",
+                   "artist_lower.y",
+                   "artist_lower.x",
+                   "artist_lower_no_bracket_schar.y",
+                   "artist_lower_no_bracket_schar.x",
+                   "track_lower_no_brackets_schar_ws.y",
+                   "track_lower_no_brackets_schar_ws.x",
+                   "recording.id")
+
+hot100_nomatch_titles_partial <- hot100_nomatch_titles_partial_3 %>%
+  dplyr::select(all_of(var_relevance))
+
 
 # remove all observations where the "artist_last_name" doesn't match for .x and .y - use code from below
 
-# do an antijoin between df_hh_proc and the df from above to see which observations didn't match properly. Also, spotchecks
+# row by row, via sapply
+hot100_nomatch_titles_partial_artists <- hot100_nomatch_titles_partial[sapply(seq_len(nrow(hot100_nomatch_titles_partial)), 
+                                                                              
+                                                                              # create the (anonymous) function
+                                                                              
+                                                                              function(i) grepl(paste0("\\b",
+                                                                                                       
+                                                                                                       # change the "artist_last_word" to lower letters
+                                                                                                       
+                                                                                                       tolower(hot100_nomatch_titles_partial[i,
+                                                                                                                                     "artist_last_word"]),
+                                                                                                       "\\b"),
+                                                                                                
+                                                                                                #retain only observations which are contained within the column below
+                                                                                                
+                                                                                                hot100_nomatch_titles_partial[i,"artist_lower.y"])),]
+
+
+
+# do an antijoin between df_hh_proc and the df from above to see which observations didn't match properly. Also, spotchecks for:
+## special character artists: beyoncé
 
 # do an antijoin between the hot100_nomatch_titles_nobrackets and the new dataframe - check if the songs were erroneously matched
 
@@ -246,19 +291,6 @@ hot100_nomatch_titles_partial_3 <- stringdist_left_join(df_hh_proc,
 #.........................................................
 # merging the tables to contain the info from both tables
 #.........................................................
-
-## not suitable, matches are not great
-# merging the tables using fuzzy_join
-# need to combin the two columns of names and track to make the join
-
-
-df_hh_and_mb_songs_artists <- stringdist_left_join(df_hh_proc,
-                                     df_musicbrainz_distinct,
-                                     by = c("tracks_artists" = "tracks_artists"), 
-                                     method = "lv",
-                                     distance_col = "distance",
-                                     max_dist = 5)
-
 
 # leftjoin of the two tables
 df_hh_and_mb_songs_left <- left_join(df_hh_proc,
@@ -283,7 +315,8 @@ var_relevance <- c("Artist",
                    "artist_lower.x",
                    "artist_lower_no_bracket_schar.y",
                    "artist_lower_no_bracket_schar.x",
-                   "track_lower_no_brackets_schar_ws",
+                   "track_lower_no_brackets_schar_ws.y",
+                   "track_lower_no_brackets_schar_ws.x",
                    "recording.id")
 
 # left join
