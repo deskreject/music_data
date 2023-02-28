@@ -215,7 +215,7 @@ hot100_nomatch_titles_nobrackets <- df_hh_proc %>% anti_join(df_musicbrainz_dist
 
 hot100_nomatch_titles_no_brackets_schar_ws <- df_hh_proc %>% anti_join(df_musicbrainz_distinct, by = "track_lower_no_brackets_schar_ws")
 
-#### ----------------- joined_df #1: creating left joined dataset (and full join) ------------------------####
+#### ----------------- hot100_titles_partial_artists : creating left joined dataset (HH and MB) with fuzzy track join ------------------------####
 
 #..................
 # partial matching
@@ -261,6 +261,8 @@ hot100_titles_partial <- hot100_titles_partial_3 %>%
 
 
 # remove all observations where the "artist_last_name" doesn't match for .x and .y - use code from below
+
+if (!require(stringi)) install.packages("stringi"); library(stringi)
 
 # row by row, via sapply
 hot100_titles_partial_artists <- hot100_titles_partial[sapply(seq_len(nrow(hot100_titles_partial)), 
@@ -311,6 +313,8 @@ write.csv(hot100_nomatch_titles_partial_artists,
 random_sample_100 <- hot100_titles_partial_artists[sample(nrow(hot100_titles_partial_artists), 100), ]
 
 # first trial, 3% mismatches
+
+#### ----------------- RETIRED - df_hh_and_mb_leftjoin_clean_distinct_2 : creating left joined dataset (HH and MB) with exact track match ------------------------####
 
 #.........................................................
 # merging the tables to contain the info from both tables
@@ -406,13 +410,76 @@ intersection_nomatch_2 <- hot100_nomatch_titles_artists_2 %>% anti_join(hot100_n
 
 #create a table that shows the entries with the most duplicate matches
 
-frequency_table_songs_mb <- df_hh_and_mb_leftjoin_clean_distinct %>%
+frequency_table_songs_mb <- hot100_titles_partial_artists %>%
   group_by(recording.title, recording.artist.credit.phrase) %>%
   summarize(number = n()) %>%
   arrange(desc(number))
 
-#### ----------------- Analyses remixes : look at the amount of "remix" in the left_joined df ------------------------####
+#### -----------------hot100_titles_partial_artists : Analyses remixes -  look at the amount of "remix" in the left_joined df ------------------------####
+
+# create dummy variable in the df for instances in the "recording.title" and / or "recording.artist.credit.phrase" of the words
+
+# remix
+
+hot100_titles_partial_artists$is_remix <- ifelse(grepl("remix",
+                                                       hot100_titles_partial_artists$track_lower.y) | grepl("remix",
+                                                                                                            hot100_titles_partial_artists$artist_lower.y),
+                                                 1,
+                                                 0)
+
+# filter by only remix to test
+hot100_partial_remix <- hot100_titles_partial_artists %>%
+  filter(is_remix == 1)
+
+## random checks
+
+# mix
+
+hot100_titles_partial_artists$is_mix <- ifelse(grepl("mix",
+                                                     hot100_titles_partial_artists$track_lower.y) | grepl("mix",
+                                                                                                          hot100_titles_partial_artists$artist_lower.y),
+                                               1,
+                                               0)
+## random checks
+
+# edit
+
+hot100_titles_partial_artists$is_edit <- ifelse(grepl("edit",
+                                                      hot100_titles_partial_artists$track_lower.y) | grepl("edit",
+                                                                                                           hot100_titles_partial_artists$artist_lower.y),
+                                                1,
+                                                0)
+## random checks
+
+# remove duplicates in the "track.lower.y"
+
+hot100_partial_mix_analysis <- hot100_titles_partial_artists[!duplicated(hot100_titles_partial_artists$track_lower.y), ]
+
+
+##  What if multiple remixes of the same song?
 
 
 
+# aggregate by month, group by the dummy, n counts as well as sum of remixes 
+##  What if multiple remixes of the same song?
+
+hot100_mix_analysis_tracks <- hot100_partial_mix_analysis %>%
+  group_by(Artist, Track) %>%
+  summarise(sum_remixes = sum(is_remix),
+            sum_mixes = sum(is_mix),
+            sum_edits = sum(is_edit))
+
+# check which Tracks aren't in the remix analysis dataset
+antijoin_remix_analysis <- df_hh_proc %>% anti_join(hot100_mix_analysis_tracks, by = "Track")
+
+# check which songs that aren't in the remix dataset are not present in the antijoin based on the fuzzy join
+
+antijoin_antijoins_remix_analysis <- antijoin_remix_analysis %>% anti_join(hot100_nomatch_titles_partial_artists, by = "Track")
+
+# histogram remixes, mixes and edits
+
+hot100_mix_analysis_tracks %>% ggplot(aes(x=sum_remixes)) + 
+  geom_histogram(bins = 20)
+
+# add the date of first charting to each "Track" and "Artist" match
 
