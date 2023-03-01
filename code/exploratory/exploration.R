@@ -440,6 +440,12 @@ hot100_titles_partial_artists$is_mix <- ifelse(grepl("mix",
                                                                                                           hot100_titles_partial_artists$artist_lower.y),
                                                1,
                                                0)
+
+# filter by only "mix" to test
+hot100_partial_mix <- hot100_titles_partial_artists %>%
+  filter(is_mix == 1)
+
+
 ## random checks
 
 # edit
@@ -480,6 +486,8 @@ antijoin_antijoins_remix_analysis <- antijoin_remix_analysis %>% anti_join(hot10
 
 hot100_mix_analysis_tracks %>% ggplot(aes(x=sum_remixes)) + 
   geom_histogram(bins = 20)
+
+table(hot100_mix_analysis_tracks$sum_remixes)
 
 # add the date of first charting to each "Track" and "Artist" match
 
