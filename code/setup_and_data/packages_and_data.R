@@ -13,6 +13,7 @@ if (!require(readr)) install.packages("readr"); library(readr) # reading csv fil
 if (!require(tidyverse)) install.packages("tidyverse"); library(tidyverse) # tidyverse
 if (!require(here)) install.packages("here"); library(here) # relative file paths
 if (!require(stringr)) install.packages("stringr"); library(stringr) # string package
+if (!require(lubridate)) install.packages("lubridate"); library(lubridate) # package for dealing with date-type format
 
 
 # initiate r environment - only once
@@ -37,9 +38,16 @@ if (!require(stringr)) install.packages("stringr"); library(stringr) # string pa
 
 
 
-# read in csv from musibrainz - with id
+# read in csv from musibrainz - export #1
 
 df_musicbrainz <- read.csv(here("data", "raw_data", "musicbrainz", "all_songs_artists_with_id.csv"))
+
+
+# read in csv from musicbrainz - export #2
+
+df_musicbrainz_v2 <- read.csv(here("data", "raw_data", "musicbrainz", "MB_export_artists_songs_dates_v2.csv"))
+
+
 
 #.......................
 # loading processed data
