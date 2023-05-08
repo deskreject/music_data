@@ -57,3 +57,162 @@ print(song_id_duplicates)
 spot_check_wiseguys <- df_musicbrainz_v2 %>% filter(song_mbid == "03d78354-d5cf-4732-887a-7f0583e3d2ba")
 
 spot_check_scott <- df_musicbrainz_v2 %>% filter(song_mbid == "01a20123-4628-4712-b86c-f8cf75b87877")
+
+## Removing duplicates:
+
+# Create the song_mbid + release_mbid + title
+df_musicbrainz_v2$song_release_mbid <- paste0(df_musicbrainz_v2$song_mbid,"_",df_musicbrainz_v2$release_mbid,"_", df_musicbrainz_v2$song_title)
+
+# remove duplicates
+df_musicbrainz_v2_unique <- df_musicbrainz_v2 %>%
+  distinct(song_release_mbid, .keep_all = TRUE)
+
+## Removing data ranges that are not relevant
+
+df_musicbrainz_v2_relevant <- df_musicbrainz_v2_unique %>%
+  filter(release_year >= 1999 & release_year < 2005)
+
+
+####----------------- the merging process - preprocessing and adding variables -----------------------------####
+
+#...........................
+# artist level alterations
+#...........................
+
+
+
+# make lower case
+df_hh_proc$artist_lower <- tolower(df_hh_proc$Artist)
+df_musicbrainz_v2_unique$artist_no_featuring_lower <- tolower(df_musicbrainz_v2_unique$Artist_no_featuring)
+
+# Define the individual patterns
+patterns <- c("featuring", "feat\\.", " ft(?=\\s|\\p{P}|$)", "ft\\.", "feat\\b", "/", ",", "&", "\\+", "with", ":")
+
+# create the "artist no featuring" column for hh - lower necessary to match patterns
+## Initialize a new column "artist_no_featuring_lower" with the values from the "artist_lower" column
+df_hh_proc$artist_no_featuring_lower <- df_hh_proc$artist_lower
+
+## Loop through the patterns and apply the `str_split()` function for each pattern
+for (pattern in patterns) {
+  df_hh_proc <- df_hh_proc %>%
+    mutate(artist_no_featuring_lower = str_split(artist_no_featuring_lower, pattern, simplify = TRUE)[, 1])
+}
+
+## Remove trailing spaces from the "artist_no_featuring_lower" column
+df_hh_proc <- df_hh_proc %>%
+  mutate(artist_no_featuring_lower = str_trim(artist_no_featuring_lower, side = "right"))
+
+
+#................................................................................
+##checking for the amount of the below pattern that appears in the artist column
+#................................................................................
+
+
+# Initialize an empty dataframe to store the counts
+num_matches_by_pattern <- data.frame()
+
+# Loop through the patterns and count the number of observations that match each pattern separately
+for (pattern in patterns) {
+  pattern_count <- df_hh_proc %>%
+    mutate(match = str_detect(artist_lower, pattern)) %>%
+    filter(match) %>%
+    count() %>%
+    mutate(Pattern = pattern)
+  
+  num_matches_by_pattern <- bind_rows(num_matches_by_pattern, pattern_count)
+}
+
+# Rename the count column
+num_matches_by_pattern <- num_matches_by_pattern %>%
+  rename(Count = n)
+
+
+#........................
+# Song level alteration
+#.......................
+
+# make lower case
+df_hh_proc$track_lower <- tolower(df_hh_proc$Track)
+df_musicbrainz_v2_unique$track_lower <- tolower(df_musicbrainz_v2_unique$song_title)
+
+
+##track based alterations
+
+# remove all song info in brackets
+df_musicbrainz_v2_unique$track_lower_no_brackets <-  gsub("\\(.*\\)", "", df_musicbrainz_v2_unique$track_lower)
+df_hh_proc$track_lower_no_brackets <- gsub("\\(.*\\)", "", df_hh_proc$track_lower)
+
+# remove all special characteristics 
+df_musicbrainz_v2_unique$track_lower_no_schar <- gsub("[^a-zA-Z0-9 ]", " ", df_musicbrainz_v2_unique$track_lower_no_brackets)
+df_hh_proc$track_lower_no_schar <- str_replace_all(df_hh_proc$track_lower_no_brackets, "[^[:alnum:]]", " ")
+
+
+# remove all the whitespace from the no schar column in both df_s to allow for partial matches
+df_musicbrainz_v2_unique$track_lower_no_brackets_schar_ws <- gsub("\\s+", "", df_musicbrainz_v2_unique$track_lower_no_schar)
+df_hh_proc$track_lower_no_brackets_schar_ws <- gsub("\\s+", "", df_hh_proc$track_lower_no_schar)
+
+
+#####---------------------- artist-based matching: getting all songs related to an artist ------------------------#####
+
+# Remove duplicates in the "df_musicbrainz_v2_unique" dataframe based on the "artist_no_featuring_lower" column
+df_musicbrainz_v2_distinct <- df_musicbrainz_v2_unique %>%
+  distinct(artist_no_featuring_lower, .keep_all = TRUE)
+
+# get the mbids matched to artist names of df_hh_proc
+
+df_hh_proc <- df_hh_proc %>%
+  left_join(df_musicbrainz_v2_distinct[,c("artist_mbid", "artist_no_featuring_lower")],
+                        by="artist_no_featuring_lower", 
+            suffix = c("", "_musibrainz"))
+
+#get the hot100 antijoin based on MBID
+df_hh_mbid_no_match <- df_hh_proc %>%
+  anti_join(df_musicbrainz_v2_distinct[,c("artist_mbid", "artist_no_featuring_lower")],
+            by="artist_no_featuring_lower", 
+            suffix = c("", "_musibrainz"))
+
+# match all the unique songs to the hot100 based on the mbid
+
+hh_mbv2_mbid_match <- df_hh_proc %>% 
+  left_join(df_musicbrainz_v2_unique[,c("song_title", 
+                                        "release_mbid",
+                                        "release_title",
+                                        "release_year",
+                                        "song_release_mbid",
+                                        "artist_mbid")],
+            by = "artist_mbid",
+            suffix = c("", "_musibrainz"))
+
+#remove duplicates
+hh_mbv2_mbid_match_distinct <- hh_mbv2_mbid_match %>%
+  distinct(song_release_mbid, .keep_all = TRUE)
+
+# check which songs from mbv2 didn't find a match
+hh_mbv2_mbid_match_antijoin <- df_musicbrainz_v2_unique %>%
+  anti_join(hh_mbv2_mbid_match_distinct, by ="song_release_mbid")
+
+
+# random sample to check whether they actually match
+
+# remove any observation with release year after 2006
+
+# proceed to the remix analysis
+
+
+
+#####---------------------- song-based matching: partial matching based on the process from MB1 data--------------####
+
+
+# try to deal with "nanana" not matching to "nananana" using the fuzzyjoin package
+## results in only less matches than there are observations in MB, but there are matches without any distance - I don't understand at all
+
+if (!require(fuzzyjoin)) install.packages("fuzzyjoin"); library(fuzzyjoin) 
+
+hot100_titles_partial_v2 <- stringdist_left_join(df_hh_proc,
+                                                df_musicbrainz_v2_unique,
+                                                by = "track_lower_no_brackets_schar_ws", 
+                                                method = "lv", distance_col = "distance",max_dist = 2) 
+
+# check the unmatched examples and by filtering by (is.na(distance))
+
+hh_unmatched_fuzzy_join_song_v2 <- hot100_titles_partial_v2 %>% filter(is.na(distance) == T)
