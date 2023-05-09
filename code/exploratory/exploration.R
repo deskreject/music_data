@@ -396,3 +396,83 @@ table(hot100_mix_analysis_tracks$sum_remixes)
 
 # add the date of first charting to each "Track" and "Artist" match
 
+#####-------------------------- hh_mbv2_mbid_match_distinct: REMIX analysis - musicbrainz v2 based --------------------------------------######
+
+#...........................
+# prechecks
+#...........................
+
+# table by year to assess the amount 
+
+df_year_count <- hh_mbv2_mbid_match_window %>%
+  group_by(release_year) %>%
+  summarise(recordings = n())
+
+# plot
+df_year_count %>% ggplot(aes(x=release_year, y=recordings)) + 
+  geom_bar(stat = "identity")
+
+# random sample to check whether they actually match + to identify terms that need to be used to identify remixes
+
+random_sample_check <- hh_mbv2_mbid_match_window[sample(nrow(hh_mbv2_mbid_match_window), size =200),]
+
+## resulting term collection
+terms <- c("remix", "mix", "dub", "edit", "radio", "rmx", "dirty", "club mix", "club version", "extended version", "extended mix")
+
+# remove duplicates of song titles
+
+hh_mbv2_mbid_match_unique_song <- hh_mbv2_mbid_match_window %>%
+  distinct(song_title, .keep_all = T)
+
+## redo the plot by year
+
+df_year_unique_song_count <- hh_mbv2_mbid_match_unique_song %>%
+  group_by(release_year) %>%
+  summarise(recordings = n())
+
+# proceed to the remix analysis
+
+hh_mbv2_mbid_match_remix <- hh_mbv2_mbid_match_unique_song %>%
+  select(Artist, Artist_no_featuring, track_lower, song_title, release_year) %>%
+  mutate(song_title_lower = tolower(song_title))
+
+# Create new columns for each term
+for (term in terms) {
+  hh_mbv2_mbid_match_remix <- hh_mbv2_mbid_match_remix %>%
+    mutate(!!sym(paste0(term, "_found")) := as.integer(str_detect(song_title_lower, term)))
+}
+
+# Create an "any_term" column
+hh_mbv2_mbid_match_remix <- hh_mbv2_mbid_match_remix %>%
+  mutate(any_term = as.integer(rowSums(select(., ends_with("_found"))) > 0))
+
+
+#............................
+# show the plot of the terms by year
+#............................
+
+# Reshape the data
+data_long <- hh_mbv2_mbid_match_remix %>%
+  select(release_year, ends_with("_found")) %>%
+  pivot_longer(cols = -release_year, names_to = "term", values_to = "found") %>%
+  mutate(term = str_remove(term, "_found")) %>%
+  group_by(release_year, term) %>%
+  summarize(count = sum(found)) %>%
+  ungroup()
+
+#create the barplot of the terms
+total_song_plot <- ggplot(hh_mbv2_mbid_match_remix, aes(x = release_year)) +
+  geom_bar() +
+  theme_minimal() +
+  labs(title = "Total Songs per Year", x = "Year", y = "Count")
+
+by_term_plot <- ggplot(data_long, aes(x = release_year, y = count, fill = term)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Term Count per Year", x = "Year", y = "Count") +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(nrow = 1, keywidth = 1, keyheight = 1))
+
+# Combine the plots into one figure
+grid.arrange(total_song_plot, by_term_plot, ncol = 1)
+

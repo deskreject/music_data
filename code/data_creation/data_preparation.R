@@ -109,6 +109,75 @@ df_hh_proc$tracks_artists <- paste(df_hh_proc$track_lower_no_brackets_ws,
 
 
 
+##### -------------- 05-23: unmatched hot100 - based on artists to artist mbid in musicbrainz v2 ------------------------- ####
+
+# Function to convert dates to the "yyyy" format
+convert_to_yyyy <- function(x) {
+  if (grepl("^\\d{4}-\\d{2}-\\d{2}$", x) || grepl("^\\d{4}-\\d{2}$", x)) {
+    return(substr(x, 1, 4))
+  } else if (grepl("^\\d{4}$", x)) {
+    return(x)
+  } else if (x == "") {
+    return(NA)
+  } else {
+    return("unknown")
+  }
+}
+
+# Convert all non-blank columns into a "yyyy" date format
+df_musicbrainz_v2 <- df_musicbrainz_v2 %>%
+  mutate(release_year = sapply(release_date, convert_to_yyyy))
+
+# Create the song_mbid + release_mbid + title
+df_musicbrainz_v2$song_release_mbid <- paste0(df_musicbrainz_v2$song_mbid,"_",df_musicbrainz_v2$release_mbid,"_", df_musicbrainz_v2$song_title)
+
+# remove duplicates
+df_musicbrainz_v2_unique <- df_musicbrainz_v2 %>%
+  distinct(song_release_mbid, .keep_all = TRUE)
+
+# make lower case
+df_hh_proc$artist_lower <- tolower(df_hh_proc$Artist)
+df_musicbrainz_v2_unique$artist_no_featuring_lower <- tolower(df_musicbrainz_v2_unique$Artist_no_featuring)
+
+# Define the individual patterns
+patterns <- c("featuring", "feat\\.", " ft(?=\\s|\\p{P}|$)", "ft\\.", "feat\\b", "/", ",", "&", "\\+", "with", ":",
+              #case specific
+              "\"misdemeanor\" ")
+
+# create the "artist no featuring" column for hh - lower necessary to match patterns
+## Initialize a new column "artist_no_featuring_lower" with the values from the "artist_lower" column
+df_hh_proc$artist_no_featuring_lower <- df_hh_proc$artist_lower
+
+## Loop through the patterns and apply the `str_split()` function for each pattern
+for (pattern in patterns) {
+  df_hh_proc <- df_hh_proc %>%
+    mutate(artist_no_featuring_lower = str_split(artist_no_featuring_lower, pattern, simplify = TRUE)[, 1])
+}
+
+## Remove trailing spaces from the "artist_no_featuring_lower" column
+df_hh_proc <- df_hh_proc %>%
+  mutate(artist_no_featuring_lower = str_trim(artist_no_featuring_lower, side = "right"))
+
+# Remove duplicates in the "df_musicbrainz_v2_unique" dataframe based on the "artist_no_featuring_lower" column
+df_musicbrainz_v2_distinct <- df_musicbrainz_v2_unique %>%
+  distinct(artist_no_featuring_lower, .keep_all = TRUE)
+
+# get the mbids matched to artist names of df_hh_proc
+
+df_hh_proc <- df_hh_proc %>%
+  left_join(df_musicbrainz_v2_distinct[,c("artist_mbid", "artist_no_featuring_lower")],
+            by="artist_no_featuring_lower", 
+            suffix = c("", "_musibrainz"))
+
+#get the hot100 antijoin based on MBID
+df_hh_mbid_no_match <- df_hh_proc %>%
+  anti_join(df_musicbrainz_v2_distinct[,c("artist_mbid", "artist_no_featuring_lower")],
+            by="artist_no_featuring_lower", 
+            suffix = c("", "_musibrainz"))
+
+# write it to data
+write.csv(df_hh_mbid_no_match, here::here("data", "incidental", "df_hh_mbid_no_match.csv"))
+
 #### ----------------- 23-03:hot100_titles_partial_artists - creating left joined dataset (HH and MB) with fuzzy track join ------------------------####
 
 #..................

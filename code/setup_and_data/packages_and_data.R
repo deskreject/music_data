@@ -14,6 +14,8 @@ if (!require(tidyverse)) install.packages("tidyverse"); library(tidyverse) # tid
 if (!require(here)) install.packages("here"); library(here) # relative file paths
 if (!require(stringr)) install.packages("stringr"); library(stringr) # string package
 if (!require(lubridate)) install.packages("lubridate"); library(lubridate) # package for dealing with date-type format
+if (!require(psych)) install.packages("psych"); library(psych) # get the describe function
+if (!require(gridExtra)) install.packages("gridExtra"); library(gridExtra) # get the describe function
 
 
 # initiate r environment - only once

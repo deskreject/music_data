@@ -73,6 +73,7 @@ df_musicbrainz_v2_relevant <- df_musicbrainz_v2_unique %>%
   filter(release_year >= 1999 & release_year < 2005)
 
 
+
 ####----------------- the merging process - preprocessing and adding variables -----------------------------####
 
 #...........................
@@ -86,7 +87,9 @@ df_hh_proc$artist_lower <- tolower(df_hh_proc$Artist)
 df_musicbrainz_v2_unique$artist_no_featuring_lower <- tolower(df_musicbrainz_v2_unique$Artist_no_featuring)
 
 # Define the individual patterns
-patterns <- c("featuring", "feat\\.", " ft(?=\\s|\\p{P}|$)", "ft\\.", "feat\\b", "/", ",", "&", "\\+", "with", ":")
+patterns <- c("featuring", "feat\\.", " ft(?=\\s|\\p{P}|$)", "ft\\.", "feat\\b", "/", ",", "&", "\\+", "with", ":",
+              #case specific
+              "\"misdemeanor\" ")
 
 # create the "artist no featuring" column for hh - lower necessary to match patterns
 ## Initialize a new column "artist_no_featuring_lower" with the values from the "artist_lower" column
@@ -174,7 +177,8 @@ df_hh_mbid_no_match <- df_hh_proc %>%
 # match all the unique songs to the hot100 based on the mbid
 
 hh_mbv2_mbid_match <- df_hh_proc %>% 
-  left_join(df_musicbrainz_v2_unique[,c("song_title", 
+  left_join(df_musicbrainz_v2_unique[,c("Artist_no_featuring",
+                                        "song_title", 
                                         "release_mbid",
                                         "release_title",
                                         "release_year",
@@ -191,12 +195,18 @@ hh_mbv2_mbid_match_distinct <- hh_mbv2_mbid_match %>%
 hh_mbv2_mbid_match_antijoin <- df_musicbrainz_v2_unique %>%
   anti_join(hh_mbv2_mbid_match_distinct, by ="song_release_mbid")
 
+#remove songs before 2008 and after 1994
 
-# random sample to check whether they actually match
+hh_mbv2_mbid_match_window <- hh_mbv2_mbid_match_distinct %>%
+  filter(release_year >= 1994 & release_year <= 2007)
 
-# remove any observation with release year after 2006
+#####-------------------------- REMIX analysis: musicbrainz v2 based --------------------------------------######
 
-# proceed to the remix analysis
+#...........................
+# Moved to: exploration.R
+#...........................
+
+
 
 
 
