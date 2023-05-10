@@ -132,8 +132,13 @@ df_musicbrainz_v2 <- df_musicbrainz_v2 %>%
 df_musicbrainz_v2$song_release_mbid <- paste0(df_musicbrainz_v2$song_mbid,"_",df_musicbrainz_v2$release_mbid,"_", df_musicbrainz_v2$song_title)
 
 # remove duplicates
-df_musicbrainz_v2_unique <- df_musicbrainz_v2 %>%
-  distinct(song_release_mbid, .keep_all = TRUE)
+# First, get the distinct rows based on 'song_release_mbid' column
+df_musicbrainz_v2_unique_pre <- df_musicbrainz_v2 %>%
+  distinct(song_release_mbid)
+
+# Next, join the distinct rows back to the original data frame
+df_musicbrainz_v2_unique <- df_musicbrainz_v2_unique_pre %>%
+  left_join(df_musicbrainz_v2, by = "song_release_mbid")
 
 # make lower case
 df_hh_proc$artist_lower <- tolower(df_hh_proc$Artist)

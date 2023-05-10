@@ -416,6 +416,8 @@ df_year_count %>% ggplot(aes(x=release_year, y=recordings)) +
 
 random_sample_check <- hh_mbv2_mbid_match_window[sample(nrow(hh_mbv2_mbid_match_window), size =200),]
 
+View(random_sample_check[,c("artist_no_featuring_lower", "Artist_no_featuring")])
+
 ## resulting term collection
 terms <- c("remix", "mix", "dub", "edit", "radio", "rmx", "dirty", "club mix", "club version", "extended version", "extended mix")
 
@@ -476,3 +478,17 @@ by_term_plot <- ggplot(data_long, aes(x = release_year, y = count, fill = term))
 # Combine the plots into one figure
 grid.arrange(total_song_plot, by_term_plot, ncol = 1)
 
+#create a barplot only for remix/clubmix
+
+data_long_restricted_remix <- data_long %>%
+  filter(term %in% c("club mix", "remix"))
+
+by_remix_term_plot <- ggplot(data_long_restricted_remix, aes(x = release_year, y = count, fill = term)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Term Count per Year", x = "Year", y = "Count") +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(nrow = 1, keywidth = 1, keyheight = 1))
+
+# Combine the plots into one figure
+grid.arrange(total_song_plot, by_remix_term_plot, ncol = 1)

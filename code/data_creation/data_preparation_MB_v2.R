@@ -58,14 +58,24 @@ spot_check_wiseguys <- df_musicbrainz_v2 %>% filter(song_mbid == "03d78354-d5cf-
 
 spot_check_scott <- df_musicbrainz_v2 %>% filter(song_mbid == "01a20123-4628-4712-b86c-f8cf75b87877")
 
+
 ## Removing duplicates:
 
 # Create the song_mbid + release_mbid + title
 df_musicbrainz_v2$song_release_mbid <- paste0(df_musicbrainz_v2$song_mbid,"_",df_musicbrainz_v2$release_mbid,"_", df_musicbrainz_v2$song_title)
 
+#spot checks
+
+spot_check_coldplay <- df_musicbrainz_v2 %>% filter(song_release_mbid == "7dfbca16-352e-42f3-9802-8c75128bb189_e7498c8d-906d-40af-9a4b-4c79aa708308_Easy to Please")
+
 # remove duplicates
-df_musicbrainz_v2_unique <- df_musicbrainz_v2 %>%
-  distinct(song_release_mbid, .keep_all = TRUE)
+# First, get the distinct rows based on 'song_release_mbid' column
+df_musicbrainz_v2_unique_pre <- df_musicbrainz_v2 %>%
+  distinct(song_release_mbid)
+
+# Next, join the distinct rows back to the original data frame
+df_musicbrainz_v2_unique <- df_musicbrainz_v2_unique_pre %>%
+  left_join(df_musicbrainz_v2, by = "song_release_mbid")
 
 ## Removing data ranges that are not relevant
 
