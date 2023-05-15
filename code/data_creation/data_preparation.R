@@ -109,6 +109,127 @@ df_hh_proc$tracks_artists <- paste(df_hh_proc$track_lower_no_brackets_ws,
 
 
 
+
+
+#### ----------------- 23-03:hot100_titles_partial_artists - creating left joined dataset (HH and MB) with fuzzy track join ------------------------####
+
+#..................
+# partial matching
+#.................
+
+# version 3 - try to deal with "nanana" not matching to "nananana" using the fuzzyjoin package
+## results in only less matches than there are observations in MB, but there are matches without any distance - I don't understand at all
+
+if (!require(fuzzyjoin)) install.packages("fuzzyjoin"); library(fuzzyjoin) 
+
+hot100_titles_partial_v1 <- stringdist_left_join(df_hh_proc,
+                                                df_musicbrainz_distinct,
+                                                by = "track_lower_no_brackets_schar_ws", 
+                                                method = "lv", distance_col = "distance",max_dist = 2) 
+
+# check the unmatched examples and by filtering by (is.na(distance))
+
+hh_unmatched_fuzzy_join_song <- hot100_titles_partial_v1 %>% filter(is.na(distance) == T)
+
+# remove all the superfluous columns - use code below
+
+var_relevance_v1 <- c("Artist",
+                   "Track", 
+                   "artist_last_word",
+                   "recording.artist.credit.phrase",
+                   "recording.title",
+                   "track_lower.y",
+                   "track_lower.x",
+                   "artist_lower.y",
+                   "artist_lower.x",
+                   "artist_lower_no_bracket_schar",
+                   "artist_lower_no_brackets_schar",
+                   "track_lower_no_brackets_schar_ws.x",
+                   "track_lower_no_brackets_schar_ws.y",
+                   "recording.id")
+
+hot100_titles_partial_v1 <- hot100_titles_partial_v1 %>%
+  dplyr::select(all_of(var_relevance_v1))
+
+
+# remove all observations where the "artist_last_name" doesn't match for .x and .y - use code from below
+
+if (!require(stringi)) install.packages("stringi"); library(stringi)
+
+# row by row, via sapply
+hot100_titles_partial_artists_v1 <- hot100_titles_partial_v1[sapply(seq_len(nrow(hot100_titles_partial_v1)), 
+                                                              
+                                                              # create the (anonymous) function
+                                                              
+                                                              function(i) grepl(paste0("\\b",
+                                                                                       
+                                                                                       # change the "artist_last_word" to lower letters
+                                                                                       
+                                                                                       tolower(hot100_titles_partial_v1[i,
+                                                                                                                     "artist_last_word"]),
+                                                                                       "\\b"),
+                                                                                
+                                                                                #retain only observations which are contained within the column below
+                                                                                
+                                                                                stri_trans_general(hot100_titles_partial_v1[i,"artist_lower.y"],
+                                                                                                   "latin-ascii"))),]
+
+
+# do an antijoin between df_hh_proc and the df from above to see which observations didn't match properly. Also, spotchecks for:
+
+hot100_nomatch_titles_partial_artists_v1 <- df_hh_proc %>% anti_join(hot100_titles_partial_artists_v1, by = "Track") 
+
+
+
+#.....................
+# the checks
+#.....................
+
+
+
+# antijoin between the two antijoins - what is new
+
+# antijoin_titles_artists_partial <- hot100_nomatch_titles_partial_artists %>% anti_join(hh_unmatched_fuzzy_join_song, by = "Track")
+
+# do an antijoin between the hot100_nomatch_titles_nobrackets and the new dataframe - check if the songs were erroneously matched
+
+# antijoin_titles_artists_nobrackets <- hot100_nomatch_titles_nobrackets %>% anti_join(hot100_titles_partial_artists, "Track")
+
+#antijoin between the two antijoins
+# antijoin_antijoins_nobrackets_partial <- hot100_nomatch_titles_partial_artists %>% anti_join(antijoin_titles_artists_nobrackets, "Track")
+
+#random checks for correct matches
+random_sample_100 <- hot100_titles_partial_artists[sample(nrow(hot100_titles_partial_artists), 100), ]
+
+# first trial, 3% mismatches
+
+#create a table that shows the entries with the most duplicate matches
+
+frequency_table_songs_mb <- hot100_titles_partial_artists %>%
+  group_by(recording.title, recording.artist.credit.phrase) %>%
+  summarize(number = n()) %>%
+  arrange(desc(number))
+
+#.............................
+# saving the dataframes
+#.............................
+
+#save the dataframe
+write.csv(hot100_titles_partial_artists,
+          here("C:/R work/Research/music_data/data/interim_data/df_hh_and_mb_leftjoin_fuzzy.csv"),
+          row.names=FALSE)
+
+
+write.csv(hot100_nomatch_titles_partial_artists,
+          here("C:/R work/Research/music_data/data/interim_data/HH_NAs.csv"),
+          row.names=FALSE)
+
+
+write.csv(frequency_table_songs_mb,
+          here("C:/R work/Research/music_data/data/interim_data/mb_songs_multiple_matches.csv"),
+          row.names=FALSE)
+
+
 ##### -------------- 05-23: unmatched hot100 - based on artists to artist mbid in musicbrainz v2 ------------------------- ####
 
 # Function to convert dates to the "yyyy" format
@@ -182,124 +303,6 @@ df_hh_mbid_no_match <- df_hh_proc %>%
 
 # write it to data
 write.csv(df_hh_mbid_no_match, here::here("data", "incidental", "df_hh_mbid_no_match.csv"))
-
-#### ----------------- 23-03:hot100_titles_partial_artists - creating left joined dataset (HH and MB) with fuzzy track join ------------------------####
-
-#..................
-# partial matching
-#.................
-
-# version 3 - try to deal with "nanana" not matching to "nananana" using the fuzzyjoin package
-## results in only less matches than there are observations in MB, but there are matches without any distance - I don't understand at all
-
-if (!require(fuzzyjoin)) install.packages("fuzzyjoin"); library(fuzzyjoin) 
-
-hot100_titles_partial_3 <- stringdist_left_join(df_hh_proc,
-                                                df_musicbrainz_distinct,
-                                                by = "track_lower_no_brackets_schar_ws", 
-                                                method = "lv", distance_col = "distance",max_dist = 2) 
-
-# check the unmatched examples and by filtering by (is.na(distance))
-
-hh_unmatched_fuzzy_join_song <- hot100_titles_partial_3 %>% filter(is.na(distance) == T)
-
-# remove all the superfluous columns - use code below
-
-var_relevance <- c("Artist",
-                   "Track", 
-                   "artist_last_word",
-                   "recording.artist.credit.phrase",
-                   "recording.title",
-                   "track_lower.y",
-                   "track_lower.x",
-                   "artist_lower.y",
-                   "artist_lower.x",
-                   "artist_lower_no_bracket_schar.y",
-                   "artist_lower_no_bracket_schar.x",
-                   "track_lower_no_brackets_schar_ws.y",
-                   "track_lower_no_brackets_schar_ws.x",
-                   "recording.id")
-
-hot100_titles_partial <- hot100_titles_partial_3 %>%
-  dplyr::select(all_of(var_relevance))
-
-
-# remove all observations where the "artist_last_name" doesn't match for .x and .y - use code from below
-
-if (!require(stringi)) install.packages("stringi"); library(stringi)
-
-# row by row, via sapply
-hot100_titles_partial_artists <- hot100_titles_partial[sapply(seq_len(nrow(hot100_titles_partial)), 
-                                                              
-                                                              # create the (anonymous) function
-                                                              
-                                                              function(i) grepl(paste0("\\b",
-                                                                                       
-                                                                                       # change the "artist_last_word" to lower letters
-                                                                                       
-                                                                                       tolower(hot100_titles_partial[i,
-                                                                                                                     "artist_last_word"]),
-                                                                                       "\\b"),
-                                                                                
-                                                                                #retain only observations which are contained within the column below
-                                                                                
-                                                                                stri_trans_general(hot100_titles_partial[i,"artist_lower.y"],
-                                                                                                   "latin-ascii"))),]
-
-
-# do an antijoin between df_hh_proc and the df from above to see which observations didn't match properly. Also, spotchecks for:
-
-hot100_nomatch_titles_partial_artists <- df_hh_proc %>% anti_join(hot100_titles_partial_artists, by = "Track") 
-
-#.....................
-# the checks
-#.....................
-
-
-
-# antijoin between the two antijoins - what is new
-
-# antijoin_titles_artists_partial <- hot100_nomatch_titles_partial_artists %>% anti_join(hh_unmatched_fuzzy_join_song, by = "Track")
-
-# do an antijoin between the hot100_nomatch_titles_nobrackets and the new dataframe - check if the songs were erroneously matched
-
-# antijoin_titles_artists_nobrackets <- hot100_nomatch_titles_nobrackets %>% anti_join(hot100_titles_partial_artists, "Track")
-
-#antijoin between the two antijoins
-# antijoin_antijoins_nobrackets_partial <- hot100_nomatch_titles_partial_artists %>% anti_join(antijoin_titles_artists_nobrackets, "Track")
-
-#random checks for correct matches
-random_sample_100 <- hot100_titles_partial_artists[sample(nrow(hot100_titles_partial_artists), 100), ]
-
-# first trial, 3% mismatches
-
-#create a table that shows the entries with the most duplicate matches
-
-frequency_table_songs_mb <- hot100_titles_partial_artists %>%
-  group_by(recording.title, recording.artist.credit.phrase) %>%
-  summarize(number = n()) %>%
-  arrange(desc(number))
-
-#.............................
-# saving the dataframes
-#.............................
-
-#save the dataframe
-write.csv(hot100_titles_partial_artists,
-          here("C:/R work/Research/music_data/data/interim_data/df_hh_and_mb_leftjoin_fuzzy.csv"),
-          row.names=FALSE)
-
-
-write.csv(hot100_nomatch_titles_partial_artists,
-          here("C:/R work/Research/music_data/data/interim_data/HH_NAs.csv"),
-          row.names=FALSE)
-
-
-write.csv(frequency_table_songs_mb,
-          here("C:/R work/Research/music_data/data/interim_data/mb_songs_multiple_matches.csv"),
-          row.names=FALSE)
-
-
 ##### --------------- RETIRED: left join based joining procedure (rather than fuzzy joining) --------------- #####
 
 #.........................................................

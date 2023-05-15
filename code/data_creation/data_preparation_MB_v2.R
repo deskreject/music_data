@@ -219,10 +219,6 @@ hh_mbv2_mbid_match_window <- hh_mbv2_mbid_match_distinct %>%
 # Moved to: exploration.R
 #...........................
 
-
-
-
-
 #####---------------------- song-based matching: partial matching based on the process from MB1 data--------------####
 
 
@@ -239,3 +235,34 @@ hot100_titles_partial_v2 <- stringdist_left_join(df_hh_proc,
 # check the unmatched examples and by filtering by (is.na(distance))
 
 hh_unmatched_fuzzy_join_song_v2 <- hot100_titles_partial_v2 %>% filter(is.na(distance) == T)
+
+# remove all the superfluous columns - use code below
+
+var_relevance_v2 <- c("Artist",
+                      "Track",
+                      "release_year",
+                      "Artist_no_featuring",
+                      "release_title",
+                      "artist_no_featuring_lower.x",
+                      "artist_no_featuring_lower.y",
+                      "track_lower_no_brackets.x",
+                      "track_lower_no_brackets.y",
+                      "track_lower_no_brackets_schar_ws.x",
+                      "track_lower_no_brackets_schar_ws.y",
+                      "artist_mbid.x",
+                      "artist_mbid.y",
+                      "song_release_mbid")
+
+hot100_titles_partial_v2 <- hot100_titles_partial_v2 %>%
+  dplyr::select(all_of(var_relevance_v2))
+
+# keep only rows where the artist_mbid.x matches artist_mbid.y
+
+hot100_titles_partial_artists_v2 <- subset(hot100_titles_partial_v2, artist_mbid.x == artist_mbid.y)
+
+# do an antijoin between df_hh_proc and the df from above to see which observations didn't match properly.
+
+hot100_nomatch_titles_partial_artists_v2 <- df_hh_proc %>% anti_join(hot100_titles_partial_artists_v2, by = "Track") 
+
+# write it to data
+write.csv(hot100_nomatch_titles_partial_artists_v2, here::here("data", "incidental", "unmatched_hot100_songs_mb_export_v2.csv"))
