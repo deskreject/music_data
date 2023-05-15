@@ -419,7 +419,7 @@ random_sample_check <- hh_mbv2_mbid_match_window[sample(nrow(hh_mbv2_mbid_match_
 View(random_sample_check[,c("artist_no_featuring_lower", "Artist_no_featuring")])
 
 ## resulting term collection
-terms <- c("remix", "mix", "dub", "edit", "radio", "rmx", "dirty", "club mix", "club version", "extended version", "extended mix")
+terms <- c("remix", "mix", "dub", "edit", "radio", "rmx", "dirty", "club mix", "club version", "extended version", "extended mix", "instrumental")
 
 # remove duplicates of song titles
 
@@ -481,7 +481,7 @@ grid.arrange(total_song_plot, by_term_plot, ncol = 1)
 #create a barplot only for remix/clubmix
 
 data_long_restricted_remix <- data_long %>%
-  filter(term %in% c("club mix", "remix"))
+  filter(term %in% c("club mix", "club version", "remix"))
 
 by_remix_term_plot <- ggplot(data_long_restricted_remix, aes(x = release_year, y = count, fill = term)) +
   geom_bar(stat = "identity") +
@@ -492,3 +492,89 @@ by_remix_term_plot <- ggplot(data_long_restricted_remix, aes(x = release_year, y
 
 # Combine the plots into one figure
 grid.arrange(total_song_plot, by_remix_term_plot, ncol = 1)
+
+#...........................................................
+# generate the proportion of terms per year plot
+#...........................................................
+
+##  Data preparation
+
+# Generate "_found" versions of terms for column names
+term_cols <- colnames(hh_mbv2_mbid_match_remix[7:18])
+
+# Create a function to summarize for a given term
+summarize_term <- function(df, term) {
+  df %>%
+    group_by(release_year) %>%
+    summarise(across(all_of(term), list(count = sum, prop = mean), .names = "{.col}_{.fn}"))
+}
+
+# Apply the function to each term
+df_list <- lapply(term_cols, function(term) summarize_term(hh_mbv2_mbid_match_remix, term))
+
+# Combine the dataframes
+df_combined <- Reduce(function(df1, df2) merge(df1, df2, by = "release_year", all = TRUE), df_list)
+
+# Calculate the total number of songs and total count of terms for each year
+df_combined <- df_combined %>%
+  mutate(any_terms_count = rowSums(select(df_combined, contains("_count"))),
+         any_terms_prop = rowSums(select(df_combined, contains("_prop"))))
+
+# add in total number of songs
+ df_combined$total_songs = df_combined$any_terms_count/df_combined$any_terms_prop
+ 
+ ## Plotting
+ 
+ # Reshape the data for plotting
+ df_plot <- df_combined %>%
+   pivot_longer(cols = ends_with("_prop"), names_to = "term", values_to = "proportion")
+ 
+ # Remove the "_prop" from the term names for cleaner plot labels
+ df_plot$term <- gsub("_prop$", "", df_plot$term)
+ 
+ # remove the "any_term" from the df_plot
+ df_plot_no_anyterm <- df_plot %>%
+   filter(term != "any_terms")
+ 
+ # keep only the terms that were of relevance for remixing
+ df_plot_remixing <- df_plot %>%
+   filter(term %in% c("club mix_found", "club version_found", "remix_found"))
+ 
+ 
+ # Plot - all
+ ggplot(df_plot, aes(x = release_year, y = proportion, color = term, group = term)) +
+   geom_line() +
+   labs(x = "Release Year", y = "Proportion", color = "Term") +
+   theme_minimal()
+ 
+ # Plot - no any terms
+ 
+ prop_plot <- ggplot(df_plot_no_anyterm, aes(x = release_year, y = proportion, color = term, group = term)) +
+   geom_line() +
+   labs(x = "Release Year", y = "Proportion", color = "Term") +
+   theme_minimal() +
+   theme(legend.position = "none")
+ 
+ # Plot - only remixing
+ 
+ prop_plot_remix <- ggplot(df_plot_remixing, aes(x = release_year, y = proportion, color = term, group = term)) +
+   geom_line() +
+   labs(x = "Release Year", y = "Proportion", color = "Term") +
+   theme_minimal() +
+   theme(legend.position = "none")
+ 
+ 
+ 
+ ## combining the three plots - all terms
+ grid.arrange(total_song_plot,
+              by_term_plot,
+              prop_plot,
+              ncol = 1)
+
+## combining the three plots - remixing only
+ 
+ grid.arrange(total_song_plot,
+              by_remix_term_plot,
+              prop_plot_remix,
+              ncol = 1)
+  

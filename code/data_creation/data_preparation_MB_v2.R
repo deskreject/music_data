@@ -96,10 +96,13 @@ df_musicbrainz_v2_relevant <- df_musicbrainz_v2_unique %>%
 df_hh_proc$artist_lower <- tolower(df_hh_proc$Artist)
 df_musicbrainz_v2_unique$artist_no_featuring_lower <- tolower(df_musicbrainz_v2_unique$Artist_no_featuring)
 
+##case specfic catches
+# Replace ""misdemeanor" " with ""
+df_hh_proc$artist_lower <- gsub(pattern = '\"misdemeanor\" ', replacement = '', x = df_hh_proc$artist_lower)
+
+
 # Define the individual patterns
-patterns <- c("featuring", "feat\\.", " ft(?=\\s|\\p{P}|$)", "ft\\.", "feat\\b", "/", ",", "&", "\\+", "with", ":",
-              #case specific
-              "\"misdemeanor\" ")
+patterns <- c("featuring", "feat\\.", " ft(?=\\s|\\p{P}|$)", "ft\\.", "feat\\b", "/", ",", "&", "\\+", "with", ":")
 
 # create the "artist no featuring" column for hh - lower necessary to match patterns
 ## Initialize a new column "artist_no_featuring_lower" with the values from the "artist_lower" column
