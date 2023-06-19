@@ -176,13 +176,13 @@ df_musicbrainz_v2_distinct <- df_musicbrainz_v2_unique %>%
 
 # get the mbids matched to artist names of df_hh_proc
 
-df_hh_proc <- df_hh_proc %>%
+df_hh_proc_v2 <- df_hh_proc %>%
   left_join(df_musicbrainz_v2_distinct[,c("artist_mbid", "artist_no_featuring_lower")],
                         by="artist_no_featuring_lower", 
             suffix = c("", "_musibrainz"))
 
 #get the hot100 antijoin based on MBID
-df_hh_mbid_no_match <- df_hh_proc %>%
+df_hh_mbid_no_match_v2 <- df_hh_proc_v2 %>%
   anti_join(df_musicbrainz_v2_distinct[,c("artist_mbid", "artist_no_featuring_lower")],
             by="artist_no_featuring_lower", 
             suffix = c("", "_musibrainz"))
@@ -227,10 +227,11 @@ hh_mbv2_mbid_match_window <- hh_mbv2_mbid_match_distinct %>%
 
 if (!require(fuzzyjoin)) install.packages("fuzzyjoin"); library(fuzzyjoin) 
 
-hot100_titles_partial_v2 <- stringdist_left_join(df_hh_proc,
+hot100_titles_partial_v2 <- stringdist_left_join(df_hh_proc_v2,
                                                 df_musicbrainz_v2_unique,
                                                 by = "track_lower_no_brackets_schar_ws", 
-                                                method = "lv", distance_col = "distance",max_dist = 2) 
+                                                method = "lv", distance_col = "distance",
+                                                max_dist = 2) 
 
 # check the unmatched examples and by filtering by (is.na(distance))
 
@@ -262,7 +263,12 @@ hot100_titles_partial_artists_v2 <- subset(hot100_titles_partial_v2, artist_mbid
 
 # do an antijoin between df_hh_proc and the df from above to see which observations didn't match properly.
 
-hot100_nomatch_titles_partial_artists_v2 <- df_hh_proc %>% anti_join(hot100_titles_partial_artists_v2, by = "Track") 
+hot100_nomatch_titles_partial_artists_v2 <- df_hh_proc_v2 %>% anti_join(hot100_titles_partial_artists_v2, by = "Track") 
+
+#total number of unmatched artists (no featuring).
+hot100_nomatch_artists_v2 <- hot100_nomatch_titles_partial_artists_v2 %>%
+  group_by(artist_no_featuring_lower) %>%
+  summarise(count = n())
 
 # write it to data
 write.csv(hot100_nomatch_titles_partial_artists_v2, here::here("data", "incidental", "unmatched_hot100_songs_mb_export_v2.csv"))

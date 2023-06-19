@@ -16,6 +16,7 @@ if (!require(stringr)) install.packages("stringr"); library(stringr) # string pa
 if (!require(lubridate)) install.packages("lubridate"); library(lubridate) # package for dealing with date-type format
 if (!require(psych)) install.packages("psych"); library(psych) # get the describe function
 if (!require(gridExtra)) install.packages("gridExtra"); library(gridExtra) # get the describe function
+if (!require(jsonlite)) install.packages("jsonlite"); library(jsonlite) # read json data
 
 
 # initiate r environment - only once
@@ -49,6 +50,13 @@ df_musicbrainz <- read.csv(here("data", "raw_data", "musicbrainz", "all_songs_ar
 
 df_musicbrainz_v2 <- read.csv(here("data", "raw_data", "musicbrainz", "MB_export_artists_songs_dates_v2.csv"))
 
+# read in csv from musicbrainz - export #3 with duplicates
+
+df_musicbrainz_v3 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_V2_correct_with_names.json"))
+
+# read in the csv from musicbrainz - export #3 without duplicates from Alessio
+
+df_musicbrainz_v3_no_dupl <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_V2_no_dup_with_names.json"))
 
 
 #.......................
