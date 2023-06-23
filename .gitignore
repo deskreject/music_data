@@ -41,3 +41,6 @@ vignettes/*.pdf
 #other environment variables
 *.env
 *.ini
+
+#large data files
+data/raw data/
