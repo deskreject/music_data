@@ -43,4 +43,4 @@ vignettes/*.pdf
 *.ini
 
 #large data files
-data/raw data/
+data/raw_data/

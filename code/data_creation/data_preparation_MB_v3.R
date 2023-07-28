@@ -4,9 +4,68 @@
 # Date: 19.06.2023
 #.................
 
+
+####----------------- alter the names of the columns so I can reuse the code below without altering --------------####
+
+#change names of the variables for v3 with info to match the code I already produced
+df_musicbrainz_v3 <- df_musicbrainz_v3 %>%
+  rename("song mbid" = "recording_id",
+         "song title" = "title",
+         "Artist_no_featuring" = "artist")
+
+#create mbid matching variable - new dataset
+df_musicbrainz_v3 <- df_musicbrainz_v3 %>%
+  mutate(Artist_no_featuring_lower_no_spec = tolower(Artist_no_featuring) %>%  # Convert to lower case
+           stringi::stri_trans_general("Latin-ASCII") %>% # Remove accents from characters
+           str_replace_all("[^[:alnum:] ]", "") %>% # Remove special characters
+           str_trim())   # Remove leading/trailing whitespace
+
+#create mbid matching variable - old dataset
+df_musicbrainz_v3_no_dates <- df_musicbrainz_v3_no_dates %>%
+  mutate(Artist_no_featuring_lower_no_spec = tolower(Artist_no_featuring) %>%  # Convert to lower case
+           stringi::stri_trans_general("Latin-ASCII") %>% # Remove accents from characters
+           str_replace_all("[^[:alnum:] ]", "") %>% # Remove special characters
+           str_trim())   # Remove leading/trailing whitespace
+
+#check number of different artist_mbids:
+
+only_mbids <- df_musicbrainz_v3_no_dates %>% 
+  group_by(Artist_no_featuring_lower_no_spec, Artist_no_featuring, `artist mbid`) %>%
+  summarise(count = n())
+
+#add in the artist mbid from prior dataset without dates
+
+df_musicbrainz_v3 <- left_join(df_musicbrainz_v3, 
+                               only_mbids[,c("artist mbid", "Artist_no_featuring_lower_no_spec")],
+                               by = "Artist_no_featuring_lower_no_spec")
+
+#check amount of mbids
+only_mbids_winfo <- df_musicbrainz_v3%>% 
+  group_by(Artist_no_featuring_lower_no_spec, `artist mbid`) %>%
+  summarise(count = n())
+
+#check amount of mbids without nas
+only_mbids_winfo_no_nas <- df_musicbrainz_v3%>% 
+  group_by(Artist_no_featuring_lower_no_spec, `artist mbid`) %>%
+  summarise(count = n()) %>%
+  filter(is.na(`artist mbid`) == F)
+
+
+#antijoin
+missing_v3_info_artists <- anti_join(only_mbids,
+                                     only_mbids_winfo_no_nas,
+                                     by = "Artist_no_featuring_lower_no_spec")
+
+#fuzzy matching w 0.2 distance for remainder
+
+
+
+
+
 #......................
 # remove duplication
 #.....................
+
 
 ####----------------------------- UNNECESSARY - checking what happens when I remove duplicates ----------------####
 

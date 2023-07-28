@@ -184,12 +184,12 @@ df_hh_proc_v2 <- df_hh_proc %>%
 #get the hot100 antijoin based on MBID
 df_hh_mbid_no_match_v2 <- df_hh_proc_v2 %>%
   anti_join(df_musicbrainz_v2_distinct[,c("artist_mbid", "artist_no_featuring_lower")],
-            by="artist_no_featuring_lower", 
-            suffix = c("", "_musibrainz"))
+            by="artist_no_featuring_lower") 
+           # suffix = c("", "_musibrainz"))
 
 # match all the unique songs to the hot100 based on the mbid
 
-hh_mbv2_mbid_match <- df_hh_proc %>% 
+hh_mbv2_mbid_match <- df_hh_proc_v2 %>% 
   left_join(df_musicbrainz_v2_unique[,c("Artist_no_featuring",
                                         "song_title", 
                                         "release_mbid",

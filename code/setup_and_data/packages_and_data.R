@@ -40,6 +40,9 @@ if (!require(jsonlite)) install.packages("jsonlite"); library(jsonlite) # read j
   # df <-  filenames2 %>% map_df(~read_delim(., delim = "r"))
 
 
+#................
+# main data files
+#................
 
 # read in csv from musibrainz - export #1
 
@@ -52,12 +55,19 @@ df_musicbrainz_v2 <- read.csv(here("data", "raw_data", "musicbrainz", "MB_export
 
 # read in csv from musicbrainz - export #3 with duplicates
 
-df_musicbrainz_v3 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_V2_correct_with_names.json"))
+df_musicbrainz_v3_no_dates <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_V2_correct_with_names.json"))
 
 # read in the csv from musicbrainz - export #3 without duplicates from Alessio
 
-df_musicbrainz_v3_no_dupl <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_V2_no_dup_with_names.json"))
+df_musicbrainz_v3_no_dates_dupl <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_V2_no_dup_with_names.json"))
 
+# read in the csv from musicbrainz - export #3 with dates from Alessio
+
+df_musicbrainz_v3 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_v3_with_info100.json"))
+
+# read in the musicbrainz data - export #4, according to the song level similarity with discography process to capture sufficient artists
+
+df_musicbrainz_v4 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_v4_with_dates.json"))
 
 #.......................
 # loading processed data
@@ -67,3 +77,13 @@ df_musicbrainz_v3_no_dupl <- fromJSON(here::here("data", "raw_data", "musicbrain
 
 df_hh_proc <- read.csv(here("data", "interim_data", "df_songs_relevant_time.csv")) 
                            
+
+#...................
+# supplementary data
+#...................
+
+# load the collection of artists with mbids for a spot check
+artist_mbids_v4 <-  read.csv(here("data", "raw_data", "musicbrainz", "artist_mbids_v4.csv"))
+
+#load the artists that did not match based on v3 export
+hot100_nomatch_artists <- read.csv(here("data", "incidental", "hot100_nomatch_artists_v3.csv"))
