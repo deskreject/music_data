@@ -186,3 +186,47 @@ hot100_titles_partial_v4 <- stringdist_left_join(df_hh_proc_v4,
 
 hh_unmatched_fuzzy_join_song_v4 <- hot100_titles_partial_v4 %>% filter(is.na(distance) == T)
 
+#change the name of the "song title" column so I can retain it
+hot100_titles_partial_v4 <- hot100_titles_partial_v4 %>%
+  mutate(song_title = `song title`)
+
+#retain only the variables of relevance
+var_relevance_v4 <- c("Artist.x",
+                      "Artist.y",
+                      "Track",
+                      "release_year",
+                      "Artist_no_featuring",
+                      "song_title",
+                      "artist_no_featuring_lower_no_spec.x",
+                      "artist_no_featuring_lower_no_spec.y",
+                      "track_lower_no_brackets.x",
+                      "track_lower_no_brackets.y",
+                      "track_lower_no_brackets_schar_ws.x",
+                      "track_lower_no_brackets_schar_ws.y",
+                      "artist mbid.x",
+                      "artist mbid.y",
+                      "recording_id",
+                      "release",
+                      "country"
+                      #"song_release_mbid"
+)
+
+hot100_titles_partial_v4 <- hot100_titles_partial_v4 %>%
+  dplyr::select(all_of(var_relevance_v4))
+
+# keep only rows where the artist_mbid.x matches artist_mbid.y
+
+hot100_titles_partial_artists_mbids_v4 <- subset(hot100_titles_partial_v4, `artist mbid.x` == `artist mbid.y`)
+
+# do an antijoin between df_hh_proc and the df from above to see which observations didn't match properly.
+
+hot100_nomatch_titles_partial_artists_v4 <- df_hh_proc_v4 %>% anti_join(hot100_titles_partial_artists_mbids_v4, by = "Track") 
+
+#total number of unmatched artists (no featuring).
+hot100_nomatch_artists_v4 <- hot100_nomatch_titles_partial_artists_v4 %>%
+  group_by(artist_no_featuring_lower) %>%
+  summarise(count = n())
+
+#distinct hh artists
+hh_distinct_artists <- df_hh_proc %>%
+  distinct(Artist)
