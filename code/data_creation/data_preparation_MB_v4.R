@@ -55,7 +55,7 @@ df_musicbrainz_v4 <- df_musicbrainz_v4 %>%
 
 # remove any observations that fall outside the date range, including NAs
 df_musicbrainz_v4_relevant <- df_musicbrainz_v4 %>%
-  filter(release_year >= 1998 & release_year < 2005 | is.na(release_year))
+  filter(release_year >= 1998 & release_year <= 2005 | is.na(release_year))
 
 #percentage of NAs vs non-nas - 23%
 # sum(is.na(df_musicbrainz_v4_relevant$release_year)==T)/291581
@@ -167,7 +167,7 @@ good_charlotte <- df_musicbrainz_v4_original %>%
   distinct(`song title`, .keep_all = T)
 
 # save relevant dataframes to share
-write.csv(df_hh_mbid_no_match_v4, here::here("data", "incidental", "hot100_nomatch_artists_v4.csv"))
+write.csv(df_hh_mbid_no_match_v4, here::here("data", "incidental","fourth_mb_export", "hot100_nomatch_artists_v4.csv"))
 
 #####---------------------- song-based matching: partial matching based on the process from MB1 data--------------####
 
@@ -207,7 +207,8 @@ var_relevance_v4 <- c("Artist.x",
                       "artist mbid.y",
                       "recording_id",
                       "release",
-                      "country"
+                      "country",
+                      "date"
                       #"song_release_mbid"
 )
 
@@ -230,3 +231,14 @@ hot100_nomatch_artists_v4 <- hot100_nomatch_titles_partial_artists_v4 %>%
 #distinct hh artists
 hh_distinct_artists <- df_hh_proc %>%
   distinct(Artist)
+
+##### ------------- write the datasets ------------------------------------------------------------------------####
+
+#the matched dataset
+write.csv(hot100_titles_partial_artists_mbids_v4, here::here("data", "incidental","fourth_mb_export", "hot100_titles_partial_artists_mbids_v4.csv"))
+
+#the unmatched songs
+write.csv(hot100_nomatch_titles_partial_artists_v4, here::here("data", "incidental","fourth_mb_export", "hot100_nomatch_titles_partial_artists_v4.csv"))
+
+#the unmatched artists
+write.csv(hot100_nomatch_artists_v4, here::here("data", "incidental","fourth_mb_export", "hot100_nomatch_artists_v4.csv"))
