@@ -90,9 +90,13 @@ table(hot100_mix_analysis_tracks$sum_remixes)
 # loading in the required data
 #..............................
 
-# mb v4 match basis
-hh_mb_mbid_match <- read.csv(here::here("data", "incidental","fourth_mb_export", "hot100_titles_partial_artists_mbids_v4.csv")) 
+#Only hot100 songs - mb v4 match basis
+# hh_mb_mbid_match <- read.csv(here::here("data", "incidental","fourth_mb_export", "hot100_titles_partial_artists_mbids_v4.csv")) 
 
+#all songs by hot100 artists - mb v4 match basis
+hh_mb_mbid_match <- read.csv(here::here("data", "incidental","fourth_mb_export", "hh_mbv4_mbid_match_window.csv"))
+hh_mb_mbid_match <- hh_mb_mbid_match %>%
+  select(-X)
 
 #...........................
 # prechecks
@@ -115,17 +119,25 @@ random_sample_check <- hh_mb_mbid_match[sample(nrow(hh_mb_mbid_match), size =200
 View(random_sample_check[,c("artist_no_featuring_lower", "Artist_no_featuring")])
 
 ## resulting term collection
-terms <- c("remix", "mix", "dub", "edit", "radio", "rmx", "dirty", "club mix", "club version", "extended version", "extended mix", "instrumental")
+terms <- c("remix", "mix", "dub", "edit", "radio", "rmx", "dirty", "club mix", "club version", "extended version", "extended mix", "instrumental", "acoustic", "version", "live")
 
 # remove duplicates of song titles
 
 hh_mb_mbid_match_unique_song <- hh_mb_mbid_match %>%
+  
+  rename(song_title = song.title) %>%
+  
+  # remove all the "song_title" with NAs
+  
+  filter(is.na(Track) == F) %>%
   
   #make sure that "distinct" function only keeps observations that have a release year
   
   arrange(song_title, is.na(release_year)) %>%
   
   distinct(song_title, .keep_all = T)
+  
+
 
 ## redo the plot by year
 
@@ -136,7 +148,7 @@ df_year_unique_song_count <- hh_mb_mbid_match_unique_song %>%
 # proceed to the remix analysis
 
 hh_mb_mbid_match_remix <- hh_mb_mbid_match_unique_song %>%
-  select(Artist.x, Artist_no_featuring, song_title, release_year, date) %>%
+  select(Artist, Artist_no_featuring, song_title, release_year, date) %>%
   mutate(song_title_lower = tolower(song_title))
 
 # Create new columns for each term
@@ -148,6 +160,7 @@ for (term in terms) {
 # Create an "any_term" column
 hh_mb_mbid_match_remix <- hh_mb_mbid_match_remix %>%
   mutate(any_term = as.integer(rowSums(select(., ends_with("_found"))) > 0))
+
 
 
 #............................
@@ -182,7 +195,7 @@ grid.arrange(total_song_plot, by_term_plot, ncol = 1)
 #create a barplot only for remix/clubmix
 
 data_long_restricted_remix <- data_long %>%
-  filter(term %in% c("club mix", "club version", "remix"))
+  filter(term %in% c("mix", "remix", "radio"))
 
 by_remix_term_plot <- ggplot(data_long_restricted_remix, aes(x = release_year, y = count, fill = term)) +
   geom_bar(stat = "identity") +
@@ -239,7 +252,7 @@ df_plot_no_anyterm <- df_plot %>%
 
 # keep only the terms that were of relevance for remixing
 df_plot_remixing <- df_plot %>%
-  filter(term %in% c("club mix_found", "remix_found"))
+  filter(term %in% c("mix_found", "remix_found", "radio_found"))
 
 
 # Plot - all
@@ -303,7 +316,7 @@ df_plot_remixing_oui <- df_plot_remixing %>%
 #create a barplot only for remix/clubmix
 
 data_long_restricted_oui_remix <- data_long_oui %>%
-  filter(term %in% c("club mix", "remix"))
+  filter(term %in% c("mix", "remix", "radio"))
 
 #create the barplot of the total songs
 total_song_plot_oui <- ggplot(hh_mbv2_mbid_match_remix_oui, aes(x = release_year)) +
