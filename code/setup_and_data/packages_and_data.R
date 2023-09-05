@@ -69,6 +69,10 @@ df_musicbrainz_v3 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all
 
 df_musicbrainz_v4 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "all_songs_v4_with_dates.json"))
 
+# read in the musicbrainz data - export #5, based on export #4 but including additional irsc variable
+
+df_musicbrianz_v5 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "df_all_songs_v5_ircs.json"))
+
 #.......................
 # loading processed data
 #.......................
