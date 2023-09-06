@@ -7,10 +7,10 @@
 #### ------------------------ df_musicbrainz_v4: initial data adjustments --------------------------------- ####
 
 # save an og dataframe
-df_musicbrainz_v4_original <- df_musicbrainz_v4
+df_musicbrainz_v4 <- df_musicbrainz_v4_original
 
 #reduce size of the working dataframe
-df_musicbrainz_v4 <- df_musicbrainz_v4_original %>%
+df_musicbrainz_v4 <- df_musicbrainz_v4 %>%
   select(`artist mbid`, `song title`, recording_id, artist, artist_credit_phrase, release, country, date, Artist, Artist_no_featuring)
 
 ##need to remove the duplicates
@@ -266,7 +266,8 @@ hh_mbv4_mbid_match <- df_hh_proc_v4 %>%
                                         "release_year",
                                         "date",
                                         "artist mbid",
-                                        "artist_no_featuring_lower_no_spec")],
+                                        "artist_no_featuring_lower_no_spec",
+                                        "country")],
             by = "artist_no_featuring_lower_no_spec",
             suffix = c("", "_musibrainz"))
 
@@ -281,7 +282,7 @@ hh_mbv4_mbid_match_antijoin <- df_musicbrainz_v4_relevant %>%
 #remove songs before 2008 and after 1994
 
 hh_mbv4_mbid_match_window <- hh_mbv4_mbid_match_distinct %>%
-  filter(release_year >= 1994 & release_year <= 2007 | is.na(release_year) == T)
+  filter(release_year >= 1998 & release_year <= 2005 | is.na(release_year) == T)
 
 ##### ---------------------- hh_mbv4_mbid_match_window: save the file -------------------------------------#####
 
