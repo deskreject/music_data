@@ -44,3 +44,6 @@ vignettes/*.pdf
 
 #large data files
 data/raw_data/
+
+#the spotify credentials
+code/data_creation/spotify_credentials.json
