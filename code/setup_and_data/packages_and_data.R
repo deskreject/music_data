@@ -4,26 +4,40 @@
 #.............................
 
 #...............
-# Base packages
+# INstalling Base packages
 #..............
 
 
-if (!require(renv)) install.packages("renv"); library(renv) # environment creator package
-if (!require(readr)) install.packages("readr"); library(readr) # reading csv files
-if (!require(tidyverse)) install.packages("tidyverse"); library(tidyverse) # tidyverse
-if (!require(here)) install.packages("here"); library(here) # relative file paths
-if (!require(stringr)) install.packages("stringr"); library(stringr) # string package
-if (!require(lubridate)) install.packages("lubridate"); library(lubridate) # package for dealing with date-type format
-if (!require(psych)) install.packages("psych"); library(psych) # get the describe function
-if (!require(gridExtra)) install.packages("gridExtra"); library(gridExtra) # get the describe function
-if (!require(jsonlite)) install.packages("jsonlite"); library(jsonlite) # read json data
+# if (!require(readr)) install.packages("readr"); library(readr) # reading csv files
+# if (!require(renv)) install.packages("renv"); library(renv) # environment creator package
+# if (!require(tidyverse)) install.packages("tidyverse"); library(tidyverse) # tidyverse
+# if (!require(here)) install.packages("here"); library(here) # relative file paths
+# if (!require(stringr)) install.packages("stringr"); library(stringr) # string package
+# if (!require(lubridate)) install.packages("lubridate"); library(lubridate) # package for dealing with date-type format
+# if (!require(psych)) install.packages("psych"); library(psych) # get the describe function
+# if (!require(gridExtra)) install.packages("gridExtra"); library(gridExtra) # get the describe function
+# if (!require(jsonlite)) install.packages("jsonlite"); library(jsonlite) # read json data
 
 
 # initiate r environment - only once
 # renv::init()
 
 # if code runs, create a new snapshot
-# renv::snapshot
+# renv::snapshot()
+
+#..........................................
+# loading base packages
+#..........................................
+
+library(readr) # 
+library(renv) # 
+library(tidyverse) 
+library(here) # 
+library(stringr) # string
+library(lubridate) # 
+library(psych) # 
+library(gridExtra) # 
+library(jsonlite) # 
 
 #.............
 # Loading  raw data
@@ -41,7 +55,7 @@ if (!require(jsonlite)) install.packages("jsonlite"); library(jsonlite) # read j
 
 
 #................
-# main data files
+# main mb data files
 #................
 
 # read in csv from musibrainz - export #1
@@ -72,6 +86,9 @@ df_musicbrainz_v4_original <- fromJSON(here::here("data", "raw_data", "musicbrai
 # read in the musicbrainz data - export #5, based on export #4 but including additional irsc variable
 
 df_musicbrainz_v5 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "df_all_songs_v5_ircs.json"))
+
+# read in the musicbrainz data which includes US as country, the date range of interest and the ISRCs for songs
+df_musicbrainz_v6_isrcs <- fromJSON(here::here("data", "raw_data", "musicbrainz","isrcs_from_release_with_label_v6.json"))
 
 #.......................
 # loading processed data
