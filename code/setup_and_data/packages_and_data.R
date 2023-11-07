@@ -17,6 +17,7 @@
 # if (!require(psych)) install.packages("psych"); library(psych) # get the describe function
 # if (!require(gridExtra)) install.packages("gridExtra"); library(gridExtra) # get the describe function
 # if (!require(jsonlite)) install.packages("jsonlite"); library(jsonlite) # read json data
+# if (!require(janitor)) install.packages("janitor"); library(janitor) # mainly for the tabyl package
 
 
 # initiate r environment - only once
@@ -38,6 +39,7 @@ library(lubridate) #
 library(psych) # 
 library(gridExtra) # 
 library(jsonlite) # 
+library(janitor) # 
 
 #.............
 # Loading  raw data
@@ -89,6 +91,13 @@ df_musicbrainz_v5 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "df_
 
 # read in the musicbrainz data which includes US as country, the date range of interest and the ISRCs for songs
 df_musicbrainz_v6_isrcs <- fromJSON(here::here("data", "raw_data", "musicbrainz","isrcs_from_release_with_label_v6.json"))
+
+#......................
+# Spotify data
+#......................
+
+#Axel's sample data
+nsync_sample_df <- read.csv(here::here("data", "raw_data", "Spotify", "nsync_axel_sample.csv"))
 
 #.......................
 # loading processed data
