@@ -99,6 +99,9 @@ df_musicbrainz_v6_isrcs <- fromJSON(here::here("data", "raw_data", "musicbrainz"
 #Axel's sample data
 nsync_sample_df <- read.csv(here::here("data", "raw_data", "Spotify", "nsync_axel_sample.csv"))
 
+#Alessios test data after failed first attempt - 10k
+spotify_acoustic_char_14500 <- fromJSON(here::here("data", "raw_data", "Spotify", "AD_spotify_acoustic_char_14500.json"))
+
 #.......................
 # loading processed data
 #.......................
