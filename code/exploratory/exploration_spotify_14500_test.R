@@ -5,16 +5,16 @@
 #...............................
 
 # investigate the data
-glimpse(spotify_acoustic_char_14500)
+glimpse(spotify_acoustic_char_v2)
 
 #check for NAs - none
-colSums(is.na(spotify_acoustic_char_14500))
+colSums(is.na(spotify_acoustic_char_v2))
 
 # unique values of the columns
-apply(spotify_acoustic_char_14500, 2, function(x){length(unique(x))})
+apply(spotify_acoustic_char_v2, 2, function(x){length(unique(x))})
 
 #investigate the unique ISRCs more closely
-unique_isrcs <- spotify_acoustic_char_14500 %>%
+unique_isrcs <- spotify_acoustic_char_v2 %>%
   group_by(ISRC) %>%
   summarise(occurrences = n())
 
@@ -28,16 +28,11 @@ lapply(seq_along(spotify_acoustic_char_14500), function(x){
 
 
 # pivotting data
-long_df <- pivot_longer(spotify_acoustic_char_14500,
+long_df <- pivot_longer(spotify_acoustic_char_v2,
                         cols = 3:13,
                         names_to = "variable",
                         values_to = "value")
 
 
 #plot histograms
-char_histograms <- ggplot(long_df, aes(x = value)) +
-  geom_histogram(bins = 40) + # You can adjust the number of bins
-  facet_wrap(~variable, scales = "free") + 
-  theme_minimal()
-
-print(char_histograms)
+P

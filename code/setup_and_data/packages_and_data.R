@@ -102,6 +102,9 @@ nsync_sample_df <- read.csv(here::here("data", "raw_data", "Spotify", "nsync_axe
 #Alessios test data after failed first attempt - 10k
 spotify_acoustic_char_14500 <- fromJSON(here::here("data", "raw_data", "Spotify", "AD_spotify_acoustic_char_14500.json"))
 
+#Alessio follow up to test data - 160k
+spotify_acoustic_char_v2 <- fromJSON(here::here("data", "raw_data", "Spotify", "AD_spotify_acoustic_char_v2.json"))
+
 #.......................
 # loading processed data
 #.......................
