@@ -6,10 +6,10 @@ the path specification for the project
 # path specification - using os
 import os
 
-# Get the current working directory
-current_dir = os.getcwd()
+# Path to the directory where path_specification.py is located
+dir_of_this_script = os.path.dirname(os.path.abspath(__file__))
 
-# Navigate up two levels to the root directory
-root_dir = os.path.abspath(os.path.join(current_dir, '..', '..'))
+# Navigate up to the root directory
+root_dir = os.path.abspath(os.path.join(dir_of_this_script, '..', '..'))
 
 print(root_dir)
