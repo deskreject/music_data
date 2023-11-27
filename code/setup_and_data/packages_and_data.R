@@ -105,6 +105,17 @@ spotify_acoustic_char_14500 <- fromJSON(here::here("data", "raw_data", "Spotify"
 #Alessio follow up to test data - 160k
 spotify_acoustic_char_v2 <- fromJSON(here::here("data", "raw_data", "Spotify", "AD_spotify_acoustic_char_v2.json"))
 
+#27.11.2023 Alessios test data
+#import the list that was transformed from json to csv that includes isrcs
+isrc_spotify_id_check_data <- read.csv(here::here("data", "incidental", "spotify_related", "last_step_song_characteristics_df_sample_post_test_1.csv"))
+
+#27.11.2023 Alessio's full data
+spotify_audio_characteristics <- fromJSON(here::here("data", "raw_data", "Spotify", "AD_spotify_accoustic_char_250k.json"),  simplifyDataFrame = TRUE)
+
+library(data.table)
+spotify_audio_characteristics_df <- as.data.frame(as.data.table(spotify_audio_characteristics))
+
+
 #.......................
 # loading processed data
 #.......................
