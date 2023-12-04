@@ -92,6 +92,15 @@ df_musicbrainz_v5 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "df_
 # read in the musicbrainz data which includes US as country, the date range of interest and the ISRCs for songs
 df_musicbrainz_v6_isrcs <- fromJSON(here::here("data", "raw_data", "musicbrainz","isrcs_from_release_with_label_v6.json"))
 
+#.................................
+# mb label to releases information
+#.................................
+
+#labels associated to ISRCs for DE, GB, Fr, US, IT, v1 
+releases_labels_v1 <- read.csv(here::here("data", "raw_data", "musicbrainz", "label_information", "releases_labels_v1_AD.csv"))
+
+
+
 #......................
 # Spotify data
 #......................
