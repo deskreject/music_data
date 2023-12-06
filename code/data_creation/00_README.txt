@@ -1,0 +1,18 @@
+Data_preparation_MB_vn scripts:
+- Scripts that were created to look into all the MB exports from Alessio over time
+- _v6 is one which includes ISRCs based on ALessios attempt to get US based releases during time from 1998-2005 
+
+data_preparation_sql_labels_v6:
+- a script related to exporting the release_IDs from the _v6 export by Alessio, and getting label information relate dto the release IDs
+
+spotify_access:
+- my attempts at getting a spotify API access script. Issue stopped at was that I get a hard request limit at 5000 requests
+- Alessio managed to batch his requests in his script, which I haven't implemented in mine 
+
+
+path_speficiation.py:
+- a helper script for my spotify access. Doesn't work well, might delete
+
+.py files:
+- from Alessio; not up to date, i.e. ones where ISRCs were mismatched to spotify IDs due to loop issue
+
