@@ -1,0 +1,16 @@
+CREATE TABLE created_tables.your_new_table_name AS
+(
+    SELECT 
+    rl.release AS release_id,
+    ad.gid AS release_mbid,
+    l.id AS label_id,
+    l.name AS label_name
+FROM 
+    musicbrainz.release r
+INNER JOIN 
+    public.release_ids_ad ad ON r.gid = ad.gid
+INNER JOIN 
+    musicbrainz.release_label rl ON r.id = rl.release
+INNER JOIN 
+    musicbrainz.label l ON rl.label = l.id
+);

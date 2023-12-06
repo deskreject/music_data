@@ -1,0 +1,20 @@
+CREATE TABLE created_tables.labels_countries_dates_AD AS
+SELECT 
+    ynt.release_id,
+    ynt.release_mbid,
+    ynt.label_id,
+    ynt.label_name,
+    l.type AS label_type_id,
+    lt.name AS type_name,
+    rc.country AS release_country,
+    rc.date_year AS release_year,
+    rc.date_month AS release_month,
+    rc.date_day AS release_day
+FROM 
+    created_tables.your_new_table_name ynt
+INNER JOIN 
+    musicbrainz.label l ON ynt.label_id = l.id
+LEFT JOIN 
+    musicbrainz.label_type lt ON l.type = lt.id
+LEFT JOIN 
+    musicbrainz.release_country rc ON ynt.release_id = rc.release;
