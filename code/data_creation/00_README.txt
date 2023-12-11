@@ -3,7 +3,7 @@ Data_preparation_MB_vn scripts:
 - _v6 is one which includes ISRCs based on ALessios attempt to get US based releases during time from 1998-2005 
 
 data_preparation_sql_labels_v6:
-- a script related to exporting the release_IDs from the _v6 export by Alessio, and getting label information relate dto the release IDs
+- a script related to exporting the release_IDs from the label export by Alessio (including more than US countries), and getting label information relate dto the release IDs
 
 spotify_access:
 - my attempts at getting a spotify API access script. Issue stopped at was that I get a hard request limit at 5000 requests
