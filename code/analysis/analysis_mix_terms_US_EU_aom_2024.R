@@ -7,67 +7,92 @@
 #.............................
 
 #load the necessary dataframe
-readRDS(here::here("data", "interim_data", "unique_tracks_mix_terms_countries_aom_2023.rda"))
+release_labels_merged_unique_tracks  <- readRDS(here::here("data", "interim_data", "unique_tracks_mix_terms_countries_aom_2023.rda"))
 
 #### --------------------------- preparing data for plotting and analysis country --------------------------- #####
 
-#### ------------------- PLOTS: simple year level term analysis ------------------------------ ####
+#make a country indicator of is_us
+
+release_labels_merged_unique_tracks$is_US <- ifelse(release_labels_merged_unique_tracks$release_country == "US",
+                                 1,
+                                 0)
 
 
-#............................
-# show the plot of the terms by year
-#............................
+# make country indiator for is EU
+release_labels_merged_unique_tracks$is_europe <- ifelse(release_labels_merged_unique_tracks$release_country != "US",
+                                 1,
+                                 0)
 
-#keep only years of relevance
-release_labels_merged_unique_tracks <- release_labels_merged_unique_tracks %>%
-  filter(release_year > 1997, release_year < 2006)
+#make a "is_EU" indicator - europe minus GB
 
-# Reshape the data
-data_long_country <- release_labels_merged_unique_tracks %>%
-  filter(release_year > 1997, release_year < 2006) %>%
-  select(release_year, release_country, ends_with("_found")) %>%
-  pivot_longer(cols = -c(release_year, release_country), names_to = "term", values_to = "found") %>%
-  mutate(term = str_remove(term, "_found")) %>%
-  group_by(release_year, release_country, term) %>%
-  summarize(count = sum(found)) %>%
+release_labels_merged_unique_tracks$is_EU <- ifelse(release_labels_merged_unique_tracks$release_country == "US",
+                                 0,
+                                 ifelse(release_labels_merged_unique_tracks$release_country == "GB", 0,1))
+
+#.......
+# create proprotions of terms by year by company
+#.......
+
+# Generate "_found" versions of terms for column names
+term_cols <- colnames(release_labels_merged_unique_tracks[15:30])
+
+# Step 1: Calculate count of each term
+counts <- release_labels_merged_unique_tracks %>%
+  group_by(release_year, release_country, label_name) %>%
+  summarise(across(all_of(term_cols), sum, .names = "{.col}_count"))
+
+# Step 2: Create a total count column
+counts <- counts %>%
+  rowwise() %>%
+  mutate(count_total = sum(c_across(ends_with("_count")), na.rm = TRUE))
+
+# Step 3: Calculate proportions for each term, handling division by zero and rounding to 3 decimal places
+proportions <- counts %>%
+  rowwise() %>%
+  mutate(across(ends_with("_count"),
+                ~round(ifelse(count_total == 0, 0, .x / count_total), 3),
+                .names = "{.col}_prop"))
+
+
+# Combine counts and proportions
+final_df <- counts %>%
+  bind_cols(proportions %>% select(ends_with("_prop")))
+
+# Clean up for final output
+df_combined <- final_df %>%
   ungroup()
 
-#create the barplot of the terms
-total_song_plot <- release_labels_merged_unique_tracks %>%
-  ggplot(aes(x = release_year)) +
-  geom_bar() +
-  theme_minimal() +
-  labs(title = "Total Songs per Year", x = "Year", y = "Count")
+# add in total number of songs
+df_combined$total_songs = df_combined$any_term_count/df_combined$any_term_prop
 
-by_term_plot <- ggplot(data_long_country, aes(x = release_year, y = count, fill = term)) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  labs(title = "Term Count per Year", x = "Year", y = "Count") +
-  theme(legend.position = "bottom") +
-  guides(fill = guide_legend(nrow = 1, keywidth = 1, keyheight = 1))
+# Reshape the data for plotting
+df_plot_us <- df_combined %>%
+  pivot_longer(cols = ends_with("_prop"), names_to = "term", values_to = "proportion")
 
-# Combine the plots into one figure
-grid.arrange(total_song_plot, by_term_plot, ncol = 1)
+# Remove the "_prop" suffix from the term names
+df_plot_us$term <- gsub("_prop$", "", df_plot_us$term)
 
-#create a barplot only for remix/clubmix
+#round to three decimal places
+df_plot_us$proportion <- round(df_plot_us$proportion, 3)
 
-total_song_plot_country <- release_labels_merged_unique_tracks %>%
-  ggplot(aes(x = release_year)) +
-  geom_bar() +
-  facet_wrap(~release_country) +
-  theme_minimal() +
-  labs(title = "Total Songs per Year", x = "Year", y = "Count")
+# merge in the "is_US" etc indicators
 
-data_long_restricted_remix <- data_long_country %>%
-  filter(term %in% c("mix", "remix", "radio", "edit"))
+df_country_indicators <- release_labels_merged_unique_tracks %>%
+  group_by(release_country, is_US)  %>%
+  dplyr::summarise(count = n())  %>%
+  dplyr::select(!count)
 
-by_remix_term_plot <- ggplot(data_long_restricted_remix, aes(x = release_year, y = count, fill = term)) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  facet_wrap(~release_country)+
-  labs(title = "Term Count per Year", x = "Year", y = "Count") +
-  theme(legend.position = "bottom") +
-  guides(fill = guide_legend(nrow = 1, keywidth = 1, keyheight = 1))
+df_plot_us <- left_join(df_plot_us, 
+                         df_country_indicators,
+                         by = "release_country") 
 
-# Combine the plots into one figure
-grid.arrange(total_song_plot_country, by_remix_term_plot, ncol = 1)
+# Remove the "any_term" from df_plot
+df_plot_no_anyterm_us <- df_plot_us %>%
+  filter(term != "any_terms")
+
+# keep only the terms that were of relevance for remixing
+df_plot_remixing_us <- df_plot_us %>%
+  filter(term %in% c("edit_found", "mix_found", "radio_found", "remix_found"))
+
+#### ------------------- PLOTS: simple year level term analysis ------------------------------ ####
+
