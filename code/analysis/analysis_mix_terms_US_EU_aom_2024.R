@@ -63,7 +63,28 @@ df_combined <- final_df %>%
   ungroup()
 
 # add in total number of songs
-df_combined$total_songs = df_combined$any_term_count/df_combined$any_term_prop
+df_combined$total_songs = round(ifelse(df_combined$any_term_count_prop == 0,
+                                 0,
+                                 df_combined$any_term_count/df_combined$any_term_count_prop),1)
+
+#add in the is_us variable
+
+df_combined$is_US <- ifelse(df_combined$release_country == "US",
+                                                    1,
+                                                    0)
+
+#remove irrelevant years
+df_combined <- df_combined %>% 
+  filter(release_year > 1997, release_year < 2006)
+
+#add in a treatment variable
+df_combined$post_treatment <- ifelse(df_combined$release_year > 2001,
+                                     1,
+                                     0)
+
+#...........
+#probably not relevant
+#...........
 
 # Reshape the data for plotting
 df_plot_us <- df_combined %>%
@@ -94,5 +115,40 @@ df_plot_no_anyterm_us <- df_plot_us %>%
 df_plot_remixing_us <- df_plot_us %>%
   filter(term %in% c("edit_found", "mix_found", "radio_found", "remix_found"))
 
-#### ------------------- PLOTS: simple year level term analysis ------------------------------ ####
+#### ------------------- Pretrends: counts for US vs non-US ------------------------------ ####
+
+#if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
+#if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
+#if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
+#if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
+
+library(did)
+library(fixest)
+library(lfe)
+library(alpaca)
+
+#just US vs non-us - plain OLS - CAllaway and Sant'anna
+
+## need to create a treatment period indicator that starts at "1" in period of the shock apparantly (https://bcallaway11.github.io/did/articles/pre-testing.html)
+
+z$period <- z$t_shock_w 
+
+att_gt(yname = "actions",
+       tname = "period",
+       idname = "user_ID",
+       gname = "group",
+       data = z,
+       bstrap = T,
+       cband = F,
+       clustervars = "user_ID")
+
+})
+
+
+
+
+#### ------------------- Pretrends: proportions for -------------------------------------- ####
+
+
+
 
