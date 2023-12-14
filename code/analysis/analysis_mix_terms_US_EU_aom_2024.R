@@ -130,21 +130,98 @@ library(alpaca)
 #just US vs non-us - plain OLS - CAllaway and Sant'anna
 
 ## need to create a treatment period indicator that starts at "1" in period of the shock apparantly (https://bcallaway11.github.io/did/articles/pre-testing.html)
+df_combined <- df_combined %>%
+  group_by(release_year) %>%
+  arrange(release_year) %>%
+  dplyr::summarise(period = 0) %>%
+  mutate(period = c(-3:4)) %>%
+  left_join(df_combined, ., by="release_year")
 
-z$period <- z$t_shock_w 
+# make the panel balanced
 
-att_gt(yname = "actions",
+library(data.table)
+
+##create a table with names for labels that release in two states
+#STEP 1: get names of the labels that operate in both regions
+international_labels_table <- df_combined %>% 
+  group_by(label_name, is_US) %>% 
+  dplyr::summarise(count = n()) %>% 
+  group_by(label_name) %>% 
+  dplyr::summarise(count = n()) %>% 
+  filter(count > 1)
+
+#STEP 2: filter the df_combined table by those label names and then create the new names
+int_labels_table_new_names <- df_combined %>% 
+  filter(label_name %in% international_labels_table$label_name) %>% 
+  rowwise() %>% 
+  mutate(label_name_new = ifelse(is_US == 1,
+                                  paste0(label_name,"_america"),
+                                  paste0(label_name,"_international"))
+  ) %>% 
+  dplyr::select(label_name, is_US, label_name_new) %>% 
+  distinct(label_name_new, .keep_all = T)
+
+#STEP3: left join to original table
+
+df_combined <- left_join(df_combined,
+                         int_labels_table_new_names,
+                         by= c("label_name", "is_US"))
+
+#STEP4: ifelse NAs to label name
+df_combined$label_name_new <- ifelse(is.na(df_combined$label_name_new) == T,
+                                     df_combined$label_name,
+                                     df_combined$label_name_new)
+
+##need to create a numeric id
+df_combined <-df_combined %>%
+  group_by(label_name_new)%>%
+  dplyr::summarise(label_id = 0) %>%
+  mutate(label_id = row_number(.)) %>%
+  left_join(df_combined, ., by = "label_name_new")
+
+# Assuming df_combined is your original data frame
+
+# Step 1: Create all combinations of id and time period
+all_combinations <- expand.grid(label_id = unique(df_combined$label_id),
+                                period = unique(df_combined$period))
+
+# Step 2: Left join with original data
+balanced_panel <- all_combinations %>% 
+  left_join(df_combined, by = c("label_id", "period"))
+
+# Step 3: Fill certain columns and impute 0 for others - doesn't map release_country properly
+balanced_panel <- balanced_panel %>%
+  filter(is.na(label_id) ==F) %>%
+  group_by(label_id) %>%
+  fill(release_year, label_name, release_country, is_US, .direction = "downup") %>%
+  ungroup() %>%
+  mutate_at(vars(-label_id, -period, -release_year, -label_name, -release_country),
+            list(~replace(., is.na(.), 0)))
+
+#create list of models for each term + any term
+
+test_unbalanced <- att_gt(yname = "any_term_count",
        tname = "period",
-       idname = "user_ID",
-       gname = "group",
-       data = z,
+       idname = "label_id",
+       gname = "is_US",
+       data = df_combined,
+       allow_unbalanced_panel = TRUE,
        bstrap = T,
        cband = F,
-       clustervars = "user_ID")
+       clustervars = "label_id")
 
-})
+test_balanced <- att_gt(yname = "any_term_count",
+                        tname = "period",
+                        idname = "label_id",
+                        gname = "is_US",
+                        data = balanced_panel,
+                        bstrap = T,
+                        cband = F,
+                        clustervars = "label_id")
 
 
+summary(test_unbalanced)
+summary(test_balanced)
 
 
 #### ------------------- Pretrends: proportions for -------------------------------------- ####
