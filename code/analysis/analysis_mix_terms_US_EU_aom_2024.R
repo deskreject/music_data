@@ -220,8 +220,17 @@ test_balanced <- att_gt(yname = "any_term_count",
                         clustervars = "label_id")
 
 
+#event study summaries
 summary(test_unbalanced)
 summary(test_balanced)
+
+#plots
+ggdid(test_balanced)
+
+#treatment effects - aggregated
+# simple = weighted average of all group-time avereage treatment effects with weights prop to group size
+aggte(test_unbalanced, type = 'simple') 
+aggte(test_balanced, type = "simple")
 
 
 #### ------------------- Pretrends: proportions for -------------------------------------- ####
