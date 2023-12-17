@@ -115,17 +115,9 @@ df_plot_no_anyterm_us <- df_plot_us %>%
 df_plot_remixing_us <- df_plot_us %>%
   filter(term %in% c("edit_found", "mix_found", "radio_found", "remix_found"))
 
-#### ------------------- Pretrends: counts for US vs non-US ------------------------------ ####
+#### ------------------- preparing data for DiD package (C & S'A) ------------------------------ ####
 
-#if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
-#if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
-#if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
-#if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
 
-library(did)
-library(fixest)
-library(lfe)
-library(alpaca)
 
 #just US vs non-us - plain OLS - CAllaway and Sant'anna
 
@@ -198,6 +190,23 @@ balanced_panel <- balanced_panel %>%
   mutate_at(vars(-label_id, -period, -release_year, -label_name, -release_country),
             list(~replace(., is.na(.), 0)))
 
+
+#####------------------------ Analysis using DiD package --------------------------#####
+
+#if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
+#if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
+#if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
+#if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
+
+library(did)
+library(fixest)
+library(lfe)
+library(alpaca)
+
+#.......................
+# individual estimation
+#.......................
+
 #create list of models for each term + any term
 
 test_unbalanced <- att_gt(yname = "any_term_count",
@@ -233,7 +242,154 @@ aggte(test_unbalanced, type = 'simple')
 aggte(test_balanced, type = "simple")
 
 
-#### ------------------- Pretrends: proportions for -------------------------------------- ####
+#....................................
+# looping through terms - counts
+#....................................
+
+# Step 1: Create a vector of variable names
+
+variable_names <- names(balanced_panel)
+
+# Variables that end with "_count"
+
+all_count_variables <- grep("_count$", variable_names, value = TRUE) 
+
+# Variables that end with "_count_prop"
+
+count_prop_variables <- grep("_count_prop$", variable_names, value = TRUE)
+
+# Exclude "_count_prop" variables
+
+count_variables <- setdiff(all_count_variables, count_prop_variables) 
+
+
+# loop estimation - balanced
+
+model_list_count_balanced <- lapply(count_variables, function(term){
+  
+  att_gt(yname = term,
+         tname = "period",
+         idname = "label_id",
+         gname = "is_US",
+         data = balanced_panel,
+         bstrap = T,
+         cband = F,
+         clustervars = "label_id")
+  
+}
+)
+
+names(model_list_count_balanced) <- paste0(count_variables, "_model_balanced")
+
+# loop estimation - unbalanced
+
+
+model_list_count_unbalanced <- lapply(count_variables, function(term){
+  
+  att_gt(yname = term,
+         tname = "period",
+         idname = "label_id",
+         gname = "is_US",
+         data = df_combined,
+         allow_unbalanced_panel = TRUE,
+         bstrap = T,
+         cband = F,
+         clustervars = "label_id")
+  
+}
+)
+
+names(model_list_count_unbalanced) <- paste0(count_variables, "_model_unbalanced")
+
+# create plots - balanced
+
+event_plots_balanced <- lapply(seq_along(model_list_count_balanced), function(model){
+  
+  ggdid(model_list_count_balanced[[model]],
+        title = count_variables[model],
+        ylab = "change in count")
+  
+})
+
+#rename
+names(event_plots_balanced) <- paste0(count_variables, "_plots_balanced")
+
+#create grid - balanced plots
+do.call(grid.arrange, c(event_plots_balanced, ncol = 4, nrow = 4))
+
+
+# create plots - ununbalanced
+
+event_plots_unbalanced <- lapply(seq_along(model_list_count_unbalanced), function(model){
+  
+  ggdid(model_list_count_unbalanced[[model]],
+        title = count_variables[model],
+        ylab = "change in count")
+  
+})
+
+#rename
+names(event_plots_unbalanced) <- paste0(count_variables, "_plots_unbalanced")
+
+#create grid - unbalanced plots
+do.call(grid.arrange, c(event_plots_unbalanced, ncol = 4, nrow = 4))
+
+# summarise models - balanced
+
+att_counts_balanced <- lapply(model_list_count_balanced, function(model){
+  
+  aggte(model, type = 'simple')
+  
+})
+
+# summarise models - unbalanced
+
+att_counts_unbalanced <- lapply(model_list_count_unbalanced, function(model){
+  
+  aggte(model, type = 'simple')
+  
+})
+
+# extract estimate and conf int by term 
+
+extract_model_info <- function(model_list) {
+  lapply(model_list, function(model) {
+    data.frame(
+      yname = model$DIDparams$yname,
+      att = model$overall.att,
+      ci_lower = model$overall.att - 1.96 * model$overall.se,
+      ci_upper = model$overall.att + 1.96 * model$overall.se
+    )
+  })
+}
+
+info_balanced <- do.call(rbind, extract_model_info(att_counts_balanced))
+info_unbalanced <- do.call(rbind, extract_model_info(att_counts_unbalanced))
+
+# Add a column to differentiate between balanced and unbalanced
+info_balanced$type <- "Balanced"
+info_unbalanced$type <- "Unbalanced"
+
+# Combine the data
+atts_count_combined_plotting <- rbind(info_balanced, info_unbalanced)
+
+
+# plot the atts
+
+dodge_width <- 0.25
+
+ggplot(atts_count_combined_plotting, aes(x = att, y = reorder(yname, att), color = type)) +
+  geom_point(position = position_dodge(width = dodge_width)) +
+  geom_errorbar(aes(xmin = ci_lower, xmax = ci_upper), 
+                width = 0.2, 
+                position = position_dodge(width = dodge_width)) +
+  coord_flip() +  # Flips the axes before adding other components
+  geom_vline(xintercept = 0.00 , color = "red", linewidth = 0.5, linetype = "solid") +  # Add a horizontal line, increase size for visibility
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(y = "Variable", x = "Average Treatment Effect (ATT)", color = "Model Type")
+
+
 
 
 
