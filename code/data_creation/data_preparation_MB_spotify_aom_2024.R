@@ -230,3 +230,67 @@ saveRDS(release_labels_merged_unique_tracks, here::here("data","interim_data","u
 #............
 
 apply(release_labels_merged_unique_tracks,2,function(x){sum(is.na(x) == T)})
+
+#####------------------------- data preparation for the similarity analysis ---------------------------- #####
+
+# check how many ISRCs are related to single Spotify ID
+spotify_ids_to_isrcs <- spotify_audio_characteristics_EU_US %>% 
+  group_by(Spotify.ID, ISRC) %>% 
+  dplyr::summarise(count = n()) %>% 
+  group_by(Spotify.ID) %>% 
+  dplyr::summarise(count=n()) %>% 
+  filter(count > 1)
+
+# remove duplicates from spotify based on spotify ids
+
+spotify_audio_char_unique_id <- spotify_audio_characteristics_EU_US %>% 
+  distinct(Spotify.ID, .keep_all = T) %>% 
+  dplyr::select(!c(id, uri, track_href, analysis_url))
+
+# remove duplicates from the labels data basedon ISRCs
+
+release_labels_merged_unique_isrc <- release_labels_merged_final %>%
+  group_by(isrc, release_country) %>%
+  arrange(isrc, is.na(release_year), release_year) %>%
+  distinct(isrc, release_country, .keep_all = TRUE) %>%
+  ungroup() %>% 
+  rename(ISRC = isrc)
+
+
+# attach the song characteristics by ISRC
+
+labels_country_audio_char <- left_join(release_labels_merged_unique_isrc,
+                                       spotify_audio_char_unique_id,
+                                       by = "ISRC")
+
+#remove the rows that didn't find a match
+labels_country_audio_char_naless <- labels_country_audio_char %>% 
+  filter(is.na(mode) ==F)
+
+#check what happens when I remove all spotify_ID + country combinations
+
+# already add in the country, label international etc indicators
+
+
+#........
+#Checks
+#........
+
+#check the post merge NA count
+
+apply(labels_country_audio_char, 2, function(x){sum(is.na(x))})
+
+#CHECK: country count pre and post NA removal
+country_count_pre <- labels_country_audio_char %>% 
+  group_by(release_country) %>% 
+  dplyr::summarise(count= n())
+
+
+
+country_count <- labels_country_audio_char_naless %>% 
+  group_by(release_country) %>% 
+  dplyr::summarise(count = n())
+
+country_count$pre_na_count <- country_count_pre$count
+
+country_count$perc_change <- (country_count$count - country_count$pre_na_count)/country_count$count

@@ -1,6 +1,6 @@
 #.............................
 # Author: Alexander Staub
-# Description: Code for remix analysis visually and with models for aom 2024
+# Description: Code for remix analysis with models for aom 2024
 # Date created: 11.12.2023
 # dependencies:
 ## script "data_preparation_MB_spotify_aom_2024" under "data_creation"
