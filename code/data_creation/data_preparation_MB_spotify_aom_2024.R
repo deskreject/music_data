@@ -154,10 +154,94 @@ release_labels_merged_final <- release_labels_merged %>%
          release_month = release_month_AS,
          release_day = release_day_AS,
          release_country = release_country_AD,
-         label_name = label_name_AS)
+         label_name = label_name_AS) %>% 
+  #remove labels without a label name as these won't be assignable anyway
+  filter(is.na(label_name) == F)
 
 #remove the main release label column to save memory
 rm(release_labels_merged)
+
+#make a country indicator of is_us
+
+release_labels_merged_final$is_US <- ifelse(release_labels_merged_final$release_country == "US",
+                                                    1,
+                                                    0)
+
+
+# make country indiator for is EU
+release_labels_merged_final$is_europe <- ifelse(release_labels_merged_final$release_country != "US",
+                                                        1,
+                                                        0)
+
+#make a "is_EU" indicator - europe minus GB
+
+release_labels_merged_final$is_EU <- ifelse(release_labels_merged_final$release_country == "US",
+                                                    0,
+                                                    ifelse(release_labels_merged_final$release_country == "GB", 0,1))
+
+#.................................................................
+##create a table with names for labels that release in two states
+#..................................................................
+
+#STEP 1: get names of the labels that operate in both regions
+international_labels_table <- release_labels_merged_final %>% 
+  group_by(label_name, is_US) %>% 
+  dplyr::summarise(count = n()) %>% 
+  group_by(label_name) %>% 
+  dplyr::summarise(count = n()) %>% 
+  filter(count > 1)
+
+#STEP 2: filter the df_combined table by those label names and then create the new names
+int_labels_table_new_names <- release_labels_merged_final %>% 
+  filter(label_name %in% international_labels_table$label_name) %>% 
+  rowwise() %>% 
+  mutate(label_name_new = ifelse(is_US == 1,
+                                 paste0(label_name,"_america"),
+                                 paste0(label_name,"_international"))
+  ) %>% 
+  dplyr::select(label_name, is_US, label_name_new) %>% 
+  distinct(label_name_new, .keep_all = T)
+
+#STEP3: left join to original table
+
+release_labels_merged_final <- left_join(release_labels_merged_final,
+                         int_labels_table_new_names,
+                         by= c("label_name", "is_US"))
+
+#STEP4: ifelse NAs to label name
+release_labels_merged_final$label_name_new <- ifelse(is.na(release_labels_merged_final$label_name_new) == T,
+                                     release_labels_merged_final$label_name,
+                                     release_labels_merged_final$label_name_new)
+
+#STEP 5: create an indicator variable that is 0 if a label only operates domestically and 1 if abroad
+release_labels_merged_final$is_international <- ifelse(release_labels_merged_final$label_name %in% international_labels_table$label_name,
+                                                       1,
+                                                       0)
+
+#.................................................................
+## create the major vs indie distinction - pro forma for now without sub labels
+## starts with: UMG, Universal, Sony, WMG, Warner, BMG, PolyGram; includes EMI
+#..................................................................
+
+#STEP 1: Create a table of label names
+label_table <- release_labels_merged_final %>% 
+  group_by(label_name) %>% 
+  dplyr::summarise(count = n()) %>% 
+  
+  #STEP 2: assign 1 or 0 binary indicator of whether a label is a major or indie
+  
+  mutate(is_major_label = ifelse(
+    grepl("^UMG|^Universal|^Sony|^WMG|^Warner|^BMG|^PolyGram|EMI", label_name, ignore.case = FALSE),
+    1, 0
+  )) %>% 
+  select(-count)
+
+#STEP 3: merge in the dummy variable to the main dataset of relevance
+
+release_labels_merged_final <-  left_join(release_labels_merged_final,
+                                              label_table,
+                                              by= "label_name")
+
 
 #remove duplicate song names - arranging by release year
 release_labels_merged_unique_tracks <- release_labels_merged_final %>%
@@ -192,6 +276,15 @@ country_table_release_merged <- release_labels_merged_unique_tracks %>%
   group_by(release_country) %>%
   dplyr::summarise(count = n())
 
+#check counts of songs of major vs indie labels
+indie_v_major_songs <- label_table  %>% 
+  group_by(is_major_label) %>% 
+  dplyr::summarise(count = sum(count))
+
+#check songs count of international vs domestic only
+international_v_domestic <- release_labels_merged_final %>% 
+  group_by(is_international) %>% 
+  dplyr::summarise(count = n())
 
 #### ---------------------------- Create the mix/remix terms for all songs across all countries ----------------------- ####
 
@@ -233,13 +326,9 @@ apply(release_labels_merged_unique_tracks,2,function(x){sum(is.na(x) == T)})
 
 #####------------------------- data preparation for the similarity analysis ---------------------------- #####
 
-# check how many ISRCs are related to single Spotify ID
-spotify_ids_to_isrcs <- spotify_audio_characteristics_EU_US %>% 
-  group_by(Spotify.ID, ISRC) %>% 
-  dplyr::summarise(count = n()) %>% 
-  group_by(Spotify.ID) %>% 
-  dplyr::summarise(count=n()) %>% 
-  filter(count > 1)
+#...........................
+# merge the datasets
+#...........................
 
 # remove duplicates from spotify based on spotify ids
 
@@ -256,7 +345,6 @@ release_labels_merged_unique_isrc <- release_labels_merged_final %>%
   ungroup() %>% 
   rename(ISRC = isrc)
 
-
 # attach the song characteristics by ISRC
 
 labels_country_audio_char <- left_join(release_labels_merged_unique_isrc,
@@ -267,14 +355,33 @@ labels_country_audio_char <- left_join(release_labels_merged_unique_isrc,
 labels_country_audio_char_naless <- labels_country_audio_char %>% 
   filter(is.na(mode) ==F)
 
-#check what happens when I remove all spotify_ID + country combinations
+#check what happens when I remove all spotify_ID + country combinations -- NOTHING
+ #labels_country_audio_char_naless_unique <-  labels_country_audio_char_naless %>% 
+   # distinct(Spotify.ID, release_country, .keep_all = T)
 
-# already add in the country, label international etc indicators
+#........................
+# create the similarity coefficients
+#.......................
 
+#turn key into dummies
+
+#normalize the coefficients - help by chatgpt
+
+# do the data processing in order to get cosine similarity by label and year - help by chatgpt
+
+# probably have to remove labels that have less than 3 songs
 
 #........
 #Checks
 #........
+
+# check how many ISRCs are related to single Spotify ID
+spotify_ids_to_isrcs <- spotify_audio_characteristics_EU_US %>% 
+  group_by(Spotify.ID, ISRC) %>% 
+  dplyr::summarise(count = n()) %>% 
+  group_by(Spotify.ID) %>% 
+  dplyr::summarise(count=n()) %>% 
+  filter(count > 1)
 
 #check the post merge NA count
 

@@ -11,28 +11,13 @@ release_labels_merged_unique_tracks  <- readRDS(here::here("data", "interim_data
 
 #### --------------------------- preparing data for plotting and analysis country --------------------------- #####
 
-#make a country indicator of is_us
 
-release_labels_merged_unique_tracks$is_US <- ifelse(release_labels_merged_unique_tracks$release_country == "US",
-                                 1,
-                                 0)
-
-
-# make country indiator for is EU
-release_labels_merged_unique_tracks$is_europe <- ifelse(release_labels_merged_unique_tracks$release_country != "US",
-                                 1,
-                                 0)
-
-#make a "is_EU" indicator - europe minus GB
-
-release_labels_merged_unique_tracks$is_EU <- ifelse(release_labels_merged_unique_tracks$release_country == "US",
-                                 0,
-                                 ifelse(release_labels_merged_unique_tracks$release_country == "GB", 0,1))
 
 #.......
 # create proprotions of terms by year by company
 #.......
 
+##IMPORTANT - MAKE SURE THERE ARE MAX 30 COLUMNS
 # Generate "_found" versions of terms for column names
 term_cols <- colnames(release_labels_merged_unique_tracks[15:30])
 
@@ -127,7 +112,9 @@ df_combined <- df_combined %>%
   arrange(release_year) %>%
   dplyr::summarise(period = 0) %>%
   mutate(period = c(-3:4)) %>%
-  left_join(df_combined, ., by="release_year")
+  left_join(df_combined, ., by="release_year") %>% 
+  #remove NA labels otherwise they will be misclassified as NA_int and NA_ameria later on
+  filter(is.na(label_name) == F)
 
 # make the panel balanced
 
