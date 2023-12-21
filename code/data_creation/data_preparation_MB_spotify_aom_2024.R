@@ -277,9 +277,9 @@ country_table_release_merged <- release_labels_merged_unique_tracks %>%
   dplyr::summarise(count = n())
 
 #check counts of songs of major vs indie labels
-indie_v_major_songs <- label_table  %>% 
+indie_v_major_songs <- release_labels_merged_final  %>% 
   group_by(is_major_label) %>% 
-  dplyr::summarise(count = sum(count))
+  dplyr::summarise(count = n())
 
 #check songs count of international vs domestic only
 international_v_domestic <- release_labels_merged_final %>% 
@@ -359,17 +359,160 @@ labels_country_audio_char_naless <- labels_country_audio_char %>%
  #labels_country_audio_char_naless_unique <-  labels_country_audio_char_naless %>% 
    # distinct(Spotify.ID, release_country, .keep_all = T)
 
+#check what happens when I sort by country, and a new column pastet together from song name, release_id and a number of spotify chars
+## country to make sure I am accounting for rereleases in other countries
+## release ID to account for some form of rerelease
+
+labels_country_audio_char_naless$filter_column <- paste0(labels_country_audio_char_naless$track_title,
+                                                        labels_country_audio_char_naless$release_mbid,
+                                                        labels_country_audio_char_naless$danceability,
+                                                        labels_country_audio_char_naless$energy,
+                                                        labels_country_audio_char_naless$valence,
+                                                        labels_country_audio_char_naless$acousticness,
+                                                        labels_country_audio_char_naless$tempo,
+                                                        labels_country_audio_char_naless$duration_ms,
+                                                        labels_country_audio_char_naless$speechiness) 
+
+labels_country_audio_char_naless_unique <- labels_country_audio_char_naless  %>% 
+  group_by(filter_column, release_country) %>% 
+  arrange(filter_column, is.na(release_year), release_year) %>%
+  distinct(filter_column, release_country, .keep_all = T) %>% 
+  ungroup() %>% 
+  select(-type, -filter_column)
+
 #........................
 # create the similarity coefficients
 #.......................
 
-#turn key into dummies
+## turn key into dummies
 
-#normalize the coefficients - help by chatgpt
+# install.packages("fastDummies")
+library(fastDummies)
+
+# Create dummy variables for the 'key' column
+labels_country_audio_char_naless_unique <- dummy_cols(labels_country_audio_char_naless_unique,
+                                                      select_columns = "key",
+                                                      remove_selected_columns = TRUE)
+
+# Create dummy variables for the 'time_signature' column
+labels_country_audio_char_naless_unique <- dummy_cols(labels_country_audio_char_naless_unique,
+                                                      select_columns = "time_signature",
+                                                      remove_selected_columns = TRUE)
+
+
+## normalize the coefficients - help by chatgpt
+# Columns to normalize
+columns_to_normalize <- c("danceability", "energy", "loudness", "mode", "speechiness", 
+                          "acousticness", "instrumentalness", "liveness", "valence", 
+                          "tempo", "duration_ms")
+
+# Applying min-max normalization
+labels_country_audio_char_naless_unique[columns_to_normalize] <- lapply(labels_country_audio_char_naless_unique_test[columns_to_normalize], function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+})
+
 
 # do the data processing in order to get cosine similarity by label and year - help by chatgpt
 
-# probably have to remove labels that have less than 3 songs
+df_filtered <- labels_country_audio_char_naless_unique %>% 
+  group_by(label_name_new, release_year) %>% 
+  dplyr::summarise(count = n())
+
+## cosine similarity
+
+#install.packages("future")
+#install.packages("future.apply")
+
+library(tidyr)
+library(proxy)
+library(future)
+library(future.apply)
+
+# Step 1: Data Preprocessing
+# Create a label-year indicator
+labels_country_audio_char_naless_unique <- labels_country_audio_char_naless_unique %>%
+  mutate(label_year = as.factor(paste(label_name_new, release_year, sep = "_")))
+
+# Filter out label-year combinations with fewer than two songs
+df_filtered <- labels_country_audio_char_naless_unique %>%
+  group_by(label_year) %>%
+  filter(n() > 2)
+
+#create the label_year_id column
+df_filtered <- df_filtered %>% 
+  mutate(label_year = as.factor(paste(label_name_new, release_year, sep = "_"))) %>% 
+  mutate(label_year_id = as.numeric(label_year))
+
+
+
+# Step 2: Cosine Similarity Calculation
+# Define a function to calculate aggregated similarity statistics within each group
+calculate_similarity_stats <- function(df) {
+  # Convert to matrix for faster computation
+  relevant_columns <- as.matrix(df[, c("danceability", "energy", "loudness", "mode", "speechiness",
+                                       "acousticness", "instrumentalness", "liveness", "valence",
+                                       "tempo", "duration_ms", paste("key_", 0:11, sep=""),
+                                       paste("time_signature_", c(0, 1, 3, 4, 5), sep=""))])
+  
+  # Calculate pairwise cosine similarity
+  similarity_matrix <- proxy::simil(relevant_columns, method = "cosine")
+  similarities <- similarity_matrix[upper.tri(similarity_matrix)]
+  
+  # Calculate statistics
+  mean_similarity <- mean(similarities, na.rm = TRUE)
+  median_similarity <- median(similarities, na.rm = TRUE)
+  sd_similarity <- sd(similarities, na.rm = TRUE)
+  cv_similarity <- sd_similarity / mean_similarity  # Coefficient of variation
+  
+  return(c(mean = mean_similarity, median = median_similarity, 
+           sd = sd_similarity, cv = cv_similarity))
+}
+
+# Step 3: Parallel Processing
+# Get the number of cores
+plan(multisession)  # Use multisession plan for parallel processing
+
+# Apply the function in parallel
+split_output_check <- split(df_filtered, df_filtered$label_year)
+similarity_results <- future_lapply(split_output_check, calculate_similarity_stats)
+
+# Combine results into a data frame
+similarity_results_df <- do.call(rbind, similarity_results)
+similarity_results_df <- cbind(label_year = names(similarity_results), similarity_results_df)
+similarity_results_df_transf <- as.data.frame(similarity_results_df, stringsAsFactors = FALSE)
+
+# Remove row names for the dataframe
+rownames(similarity_results_df_transf) <- NULL
+
+
+# Step 4: do the merging process - create a dataframe grouped by label year with relevant variables for later analysis
+
+label_year_similarity_df <- labels_country_audio_char_naless_unique %>% 
+  group_by(release_year,
+           label_name_new,
+           label_name,
+           is_US,
+           is_international,
+           is_major_label,
+           label_year) %>% 
+  summarise(n_songs = n())
+
+#change to string
+label_year_similarity_df$label_year <- as.character(label_year_similarity_df$label_year)
+
+# merge in the similarity scores based on labels
+label_year_similarity_df_merged <- left_join(label_year_similarity_df,
+                                             similarity_results_df_transf,
+                                             by = "label_year")
+
+#save as a rds object
+saveRDS(label_year_similarity_df_merged, here::here("data", "interim_data", "similarity_scores_label_years_aom_2023.rda"))
+
+#.....
+# trouble shooting
+#........
+split_output_check <- split(df_filtered, df_filtered$label_year_id)
+
 
 #........
 #Checks
@@ -401,3 +544,25 @@ country_count <- labels_country_audio_char_naless %>%
 country_count$pre_na_count <- country_count_pre$count
 
 country_count$perc_change <- (country_count$count - country_count$pre_na_count)/country_count$count
+
+
+
+#CHECK: count number of release countries for the unique release merged dataset
+country_table_release_merged <- labels_country_audio_char_naless_unique %>%
+  group_by(release_country) %>%
+  dplyr::summarise(count = n())
+
+#check counts of songs of major vs indie labels
+indie_v_major_songs <- labels_country_audio_char_naless_unique  %>% 
+  group_by(is_major_label) %>% 
+  dplyr::summarise(count = n())
+
+#check songs count of international vs domestic only
+international_v_domestic <- labels_country_audio_char_naless_unique %>% 
+  group_by(is_international) %>% 
+  dplyr::summarise(count = n())
+
+
+#check why some label_year_ids have an error
+label_year_id_73 <- df_filtered %>% 
+  filter(label_year_id == 73)
