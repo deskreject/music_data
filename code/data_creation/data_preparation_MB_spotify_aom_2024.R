@@ -407,7 +407,8 @@ columns_to_normalize <- c("danceability", "energy", "loudness", "mode", "speechi
                           "tempo", "duration_ms")
 
 # Applying min-max normalization
-labels_country_audio_char_naless_unique[columns_to_normalize] <- lapply(labels_country_audio_char_naless_unique_test[columns_to_normalize], function(x) {
+labels_country_audio_char_naless_unique[columns_to_normalize] <- lapply(labels_country_audio_char_naless_unique_test[columns_to_normalize],
+                                                                        function(x) {
   (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
 })
 
