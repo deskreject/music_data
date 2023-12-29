@@ -42,6 +42,11 @@ labels_year_similarity_df$post_treatment <- if_else(labels_year_similarity_df$re
                                                     1,
                                                     0)
 
+#small adjustment to cv value that is above one
+labels_year_similarity_df$cv  <- if_else(labels_year_similarity_df$cv > 1,
+                                         0.9999,
+                                         labels_year_similarity_df$cv)
+
 
 #####----------------- DiD analysis: US vs Europe similarity indiator analysis over 4 years ------ #####
 
@@ -51,12 +56,15 @@ labels_year_similarity_df$post_treatment <- if_else(labels_year_similarity_df$re
 #if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
 #if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
 #if (!require(texreg)) install.packages("texreg"); library(texreg) #creating tables for latex
+#if (!require(betareg)) install.packages("betareg"); library(betareg) #beta regression
+
 
 library(did)
 library(fixest)
 library(lfe)
 library(alpaca)
 library(texreg)
+library(betareg)
 
 #..................................................
 # looped estimation of all variables - DiD package
@@ -161,6 +169,98 @@ ols_fixed_effects_model <- lapply(dependent_variables, function(dv){
 }
 )
 
+# Fractional Logit Models using glm with quasibinomial
+fractional_logit_models <- lapply(dependent_variables, function(dv) {
+  formula <- as.formula(paste(dv, "~ is_US * post_treatment"))
+  glm(formula, family = quasibinomial(link = "logit"), data = labels_year_similarity_df)
+})
+
+# Beta Regression Models
+beta_regression_models <- lapply(dependent_variables, function(dv) {
+  formula <- as.formula(paste(dv, "~ is_US * post_treatment "))
+  betareg(formula, data = labels_year_similarity_df)
+})
+
+#.................
+# tables
+#.................
+
+#ols results
+texreg(list(ols_similarity_model[[1]],
+       ols_similarity_model[[2]],
+       ols_similarity_model[[3]],
+       ols_similarity_model[[4]]),
+       digits = 3,
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("mean", "median", "Standard Dev.", "Variance Coef"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment") 
+       
+       )
+
+#fixed effects
+texreg(list(ols_fixed_effects_model[[1]],
+            ols_fixed_effects_model[[2]],
+            ols_fixed_effects_model[[3]],
+            ols_fixed_effects_model[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("mean", "median", "Standard Dev.", "Variance Coef"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment"))
+
+#fractional logit models
+texreg(list(fractional_logit_models[[1]],
+            fractional_logit_models[[2]],
+            fractional_logit_models[[3]],
+            fractional_logit_models[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("mean", "median", "Standard Dev.", "Variance Coef"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment"))
+
+#beta regression models
+texreg(list(beta_regression_models[[1]],
+            beta_regression_models[[2]],
+            beta_regression_models[[3]],
+            beta_regression_models[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("mean", "median", "Standard Dev.", "Variance Coef"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment",
+                             "Precision: (phi)"))
+
+
+
+#### -------------------- moderator variable estimation -----------------####
+
+#if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
+#if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
+#if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
+#if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
+#if (!require(texreg)) install.packages("texreg"); library(texreg) #creating tables for latex
+
+library(did)
+library(fixest)
+library(lfe)
+library(alpaca)
+library(texreg)
+
+#extract the dependent variables
+
+dependent_variables <- names(labels_year_similarity_df[,9:12])
+
+#.............
+# triple interaction - major vs indie
+#....................
+
 #moderator variables - ols
 
 ols_similarity_model_mod_maj <- lapply(dependent_variables, function(dv){
@@ -183,33 +283,160 @@ ols_fixed_effects_model_mod_maj <- lapply(dependent_variables, function(dv){
 }
 )
 
+# Fractional Logit Models using glm with quasibinomial
+fractional_logit_models_mod_maj <- lapply(dependent_variables, function(dv) {
+  formula <- as.formula(paste(dv, "~ is_US * post_treatment*is_major_label"))
+  glm(formula, family = quasibinomial(link = "logit"), data = labels_year_similarity_df)
+})
+
+# Beta Regression Models
+beta_regression_models_mod_maj <- lapply(dependent_variables, function(dv) {
+  formula <- as.formula(paste(dv, "~ is_US * post_treatment *is_major_label"))
+  betareg(formula, data = labels_year_similarity_df)
+})
+
+#.............
+#sample split - major vs indie
+#.............
 
 
 #.................
 # tables
 #.................
 
-#ols results
-texreg(list(ols_similarity_model[[1]],
-       ols_similarity_model[[2]],
-       ols_similarity_model[[3]],
-       ols_similarity_model[[4]]))
-
-#fixed effects
-texreg(list(ols_fixed_effects_model[[1]],
-            ols_fixed_effects_model[[2]],
-            ols_fixed_effects_model[[3]],
-            ols_fixed_effects_model[[4]]))
-
 #ols results - moderators
 texreg(list(ols_similarity_model_mod_maj[[1]],
-       ols_similarity_model_mod_maj[[2]],
-       ols_similarity_model_mod_maj[[3]],
-       ols_similarity_model_mod_maj[[4]]))
+            ols_similarity_model_mod_maj[[2]],
+            ols_similarity_model_mod_maj[[3]],
+            ols_similarity_model_mod_maj[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       digits = 3)
 
 #fixed effects - moderators
 texreg(list(ols_fixed_effects_model_mod_maj[[1]],
             ols_fixed_effects_model_mod_maj[[2]],
             ols_fixed_effects_model_mod_maj[[3]],
-            ols_fixed_effects_model_mod_maj[[4]]))
+            ols_fixed_effects_model_mod_maj[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1) )
 
+#fractional logit models
+texreg(list(fractional_logit_models_mod_maj[[1]],
+            fractional_logit_models_mod_maj[[2]],
+            fractional_logit_models_mod_maj[[3]],
+            fractional_logit_models_mod_maj[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1) )
+
+#beta regression models
+texreg(list(beta_regression_models_mod_maj[[1]],
+            beta_regression_models_mod_maj[[2]],
+            beta_regression_models_mod_maj[[3]],
+            beta_regression_models_mod_maj[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("mean", "median", "Standard Dev.", "Variance Coef"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "is major label",
+                             "US based*post treatment",
+                             "US based*major label",
+                             "post treatment*major label",
+                             "Triple interaction",
+                             "Precision: (phi)"))
+
+
+####--------------------- Varying time windows --------------------------####
+
+#extract the dependent variables
+
+dependent_variables <- names(labels_year_similarity_df[,9:12])
+
+#time sequence
+
+time <- seq(1,4)
+
+# loop estimation - balanced
+
+model_list_similarity_time <- lapply(time, function(t){
+  
+  df_new <- labels_year_similarity_df %>% 
+    filter(period <= t, period >= (t-1)*-1)
+  
+ models <- lapply(dependent_variables, function(dv){
+  
+  att_gt(yname = dv,
+         tname = "period",
+         idname = "label_id",
+         gname = "is_US",
+         data = df_new,
+         allow_unbalanced_panel = TRUE,
+         bstrap = T,
+         cband = F,
+         clustervars = "label_id")
+  
+}
+)
+ names(models) <- paste0(dependent_variables) 
+ return(models)
+}
+)
+
+names(model_list_similarity_time) <- paste0(time, "_years")
+
+
+# summarise models 
+
+att_similarity_time <- lapply(model_list_similarity_time, function(time_list) {
+  lapply(time_list, function(model) {
+    aggte(model, type = 'simple')
+  })
+})
+
+# Modify the data extraction function to include 'time'
+extract_model_info <- function(model_list, time_values) {
+  lapply(seq_along(model_list), function(i) {
+    lapply(model_list[[i]], function(model) {
+      data.frame(
+        yname = model$DIDparams$yname,
+        time = time_values[i],
+        att = model$overall.att,
+        ci_lower = model$overall.att - 1.96 * model$overall.se,
+        ci_upper = model$overall.att + 1.96 * model$overall.se
+      )
+    })
+  })
+}
+
+info_similarity <- do.call(rbind, do.call(rbind, extract_model_info(att_similarity_time, time)))
+
+# Plot the ATTs with time as a grouping aesthetic
+
+# Sort the data frame by 'yname' alphabetically
+info_similarity <- info_similarity[order(info_similarity$yname),]
+
+# Updated ggplot code without 'coord_flip' and with axis labels corrected
+ggplot(info_similarity, aes(x = yname, y = att, color = as.factor(time))) +
+  geom_point(position = position_dodge(width = 0.25)) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), position = position_dodge(width = 0.25), width = 0.2) +
+  geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
+  theme_minimal() +
+  labs(y = "Variable", x = "Average Treatment Effect (ATT)", color = "Time Interval") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#...................
+# effect size check
+#...................
+
+descriptives_by_group_treatment <- labels_year_similarity_df %>%
+  group_by(is_US, post_treatment) %>%
+  summarise(
+    across(c(mean, median, sd, cv),
+           list(mean = ~mean(.x, na.rm = TRUE),
+                median = ~median(.x, na.rm = TRUE),
+                sd = ~sd(.x, na.rm = TRUE)),
+           .names = "{.col}_{.fn}") # to create new column names
+  ) %>%
+  ungroup()
+  
+
+#.............
+# non DiD models
