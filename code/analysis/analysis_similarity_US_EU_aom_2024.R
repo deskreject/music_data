@@ -344,6 +344,45 @@ texreg(list(beta_regression_models_mod_maj[[1]],
                              "Precision: (phi)"))
 
 
+#......................
+# sample split
+#......................
+
+split_major <- split(labels_year_similarity_df, labels_year_similarity_df$is_major_label)
+names(split_major) <- c("indie", "major")
+
+OLS_similarity_sample_split <- lapply(split_major, function(label){
+  
+  models <- lapply(dependent_variables, function(dv){
+    
+    formula <- as.formula(paste(dv, "~ is_US * post_treatment"))
+    
+    lm(formula, data = label)
+  
+  })
+  
+  names(models) <- paste0(dependent_variables)
+  return(models)
+  
+})
+
+#........
+#tables
+#.......
+
+#OLS
+texreg(list(OLS_similarity_sample_split$indie$mean,
+            OLS_similarity_sample_split$major$mean,
+            OLS_similarity_sample_split$indie$median,
+            OLS_similarity_sample_split$major$median,
+            OLS_similarity_sample_split$indie$sd,
+            OLS_similarity_sample_split$major$sd,
+            OLS_similarity_sample_split$indie$cv,
+            OLS_similarity_sample_split$major$cv),
+       digits = 3,
+       stars = c(0.001, 0.01, 0.05, 0.1) )
+
+
 ####--------------------- Varying time windows --------------------------####
 
 #extract the dependent variables
