@@ -48,6 +48,97 @@ labels_year_similarity_df$cv  <- if_else(labels_year_similarity_df$cv > 1,
                                          labels_year_similarity_df$cv)
 
 
+####------------------- Number of songs: US vs Europe ----------------- #####
+
+#if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
+#if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
+#if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
+#if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
+#if (!require(texreg)) install.packages("texreg"); library(texreg) #creating tables for latex
+#if (!require(betareg)) install.packages("betareg"); library(betareg) #beta regression
+
+
+library(did)
+library(fixest)
+library(lfe)
+library(alpaca)
+library(texreg)
+
+#..................
+# ATT varying over time for number of songs
+#..................
+
+#time sequence
+
+time <- seq(1,4)
+
+# loop estimation - balanced
+
+model_list_songs_time <- lapply(time, function(t){
+  
+  df_new <- labels_year_similarity_df %>% 
+    filter(period <= t, period >= (t-1)*-1)
+    
+    att_gt(yname = "n_songs",
+           tname = "period",
+           idname = "label_id",
+           gname = "is_US",
+           data = df_new,
+           allow_unbalanced_panel = TRUE,
+           bstrap = T,
+           cband = F,
+           clustervars = "label_id")
+    
+
+}
+)
+
+names(model_list_songs_time) <- paste0(time, "_years")
+
+#eventstudy
+# create plots - no controls
+
+event_plot_songs <- ggdid(model_list_songs_time[[4]],
+        title = "Eventustdy number of songs",
+        ylab = "change in number of songs compared to base period")
+
+
+event_plot_songs
+
+# summarise models 
+
+att_songs_time <- lapply(model_list_songs_time, function(model) {
+    aggte(model, type = 'simple')
+})
+
+# Modify the data extraction function to include 'time'
+extract_song_model_info <- function(model_list) {
+  lapply(model_list, function(model) {
+    data.frame(
+      yname = model$DIDparams$yname,
+      att = model$overall.att,
+      ci_lower = model$overall.att - 1.96 * model$overall.se,
+      ci_upper = model$overall.att + 1.96 * model$overall.se
+    )
+  })
+}
+
+info_songs <- do.call(rbind, extract_song_model_info(att_songs_time))
+info_songs$yname <- paste0(time, "_years")
+
+# Plot the ATTs with time as a grouping aesthetic
+
+# Updated ggplot code without 'coord_flip' and with axis labels corrected
+ggplot(info_songs, aes(x = yname, y = att)) +
+  geom_point()  +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
+  theme_minimal() +
+  labs(y = "Time around treatment", x = "Average Treatment Effect (ATT)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
 #####----------------- DiD analysis: US vs Europe similarity indiator analysis over 4 years ------ #####
 
 
@@ -74,7 +165,7 @@ library(betareg)
 
 dependent_variables <- names(labels_year_similarity_df[,9:12])
 
-# loop estimation - balanced
+# loop estimation - no controls
 
 model_list_similarity <- lapply(dependent_variables, function(dv){
   
@@ -91,9 +182,28 @@ model_list_similarity <- lapply(dependent_variables, function(dv){
 }
 )
 
-names(model_list_similarity) <- paste0(dependent_variables)
+# loop estimation - controls
 
-# create plots 
+model_list_similarity_controls <- lapply(dependent_variables, function(dv){
+  
+  att_gt(yname = dv,
+         tname = "period",
+         idname = "label_id",
+         gname = "is_US",
+         data = labels_year_similarity_df,
+         allow_unbalanced_panel = TRUE,
+         xformla = ~n_songs,
+         bstrap = T,
+         cband = F,
+         clustervars = "label_id")
+  
+}
+)
+
+names(model_list_similarity) <- paste0(dependent_variables)
+names(model_list_similarity_controls) <- paste0(dependent_variables)
+
+# create plots - no controls
 
 event_plots_similarity <- lapply(seq_along(model_list_similarity), function(model){
   
@@ -103,11 +213,23 @@ event_plots_similarity <- lapply(seq_along(model_list_similarity), function(mode
   
 })
 
+# create plots - controls
+
+event_plots_similarity_controls <- lapply(seq_along(model_list_similarity), function(model){
+  
+  ggdid(model_list_similarity_controls[[model]],
+        title = dependent_variables[model],
+        ylab = "change in similarity metric")
+  
+})
+
 #rename
 names(event_plots_similarity) <- paste0(dependent_variables)
+names(event_plots_similarity_controls) <- paste0(dependent_variables)
 
 #create grid - balanced plots
 do.call(grid.arrange, c(event_plots_similarity, ncol = 2, nrow = 2))
+do.call(grid.arrange, c(event_plots_similarity_controls, ncol = 2, nrow = 2))
 
 # summarise models 
 
