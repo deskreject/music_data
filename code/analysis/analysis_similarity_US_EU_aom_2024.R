@@ -361,6 +361,9 @@ texreg(list(beta_regression_models[[1]],
 
 
 
+
+
+
 #### -------------------- moderator variable estimation -----------------####
 
 #if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
@@ -601,3 +604,102 @@ descriptives_by_group_treatment <- labels_year_similarity_df %>%
 
 #.............
 # non DiD models
+#...............
+
+#### ------------------- AOM 2024 TABLES: US vs Europe similarity indiator analysis 4 years  ------- ####
+
+#.........
+# DiD
+#.........
+
+#install package xtable
+library(xtable)
+
+#check the model summary of the DiD by C & S'A
+summary.MP(att_similarity_time$`2_years`$mean)
+
+
+# Function to create LaTeX table from a given list of models
+create_latex_table <- function(years_list) {
+  # Initialize a matrix to store results (7 rows for different metrics, 4 columns for models)
+  results <- matrix(nrow = 7, ncol = 4)
+  rownames(results) <- c("ATT", "SE", "Conf Int", "Number of observations", "Number of units", "Number of periods", "Bootstrap iterations")
+  colnames(results) <- c("mean", "median", "sd", "cv")
+  
+  # Fill the matrix with extracted values
+  for (model_name in colnames(results)) {
+    model <- years_list[[model_name]]
+    results["ATT", model_name] <- sprintf("%.3f", model$overall.att)
+    results[2, model_name] <- sprintf("(%.3f)", model$overall.se)  # SE
+    
+    # Confidence intervals
+    lower_ci_bound <- model$overall.att - 1.96 * model$overall.se
+    upper_ci_bound <- model$overall.att + 1.96 * model$overall.se
+    results[3, model_name] <- sprintf("[%.3f,%.3f]", lower_ci_bound, upper_ci_bound)
+    
+    # Other details
+    results["Number of observations", model_name] <- nrow(model$DIDparams$data)
+    results["Number of units", model_name] <- model$DIDparams$n
+    results["Number of periods", model_name] <- model$DIDparams$nT
+    results["Bootstrap iterations", model_name] <- model$DIDparams$biters
+  }
+  
+  # Create LaTeX table
+  latex_table <- xtable(results, 
+                        caption = "Based on cluster bootstrapped standard errors. Estimation method \"Doubly Robust\" based on Sant'Anna and Zhao, 2020. Unit of observation is the record label, the treated group refers to record labels in the US and the control group refers to record labels in Europe (DE, FR, GB, IT) that released songs during the time period of relevance",
+                        label = "table:label_here")
+  print(latex_table, include.rownames = TRUE, hline.after = c(-1,0,3,7), comment = FALSE)
+  
+}
+
+# Example usage
+create_latex_table(att_similarity_time$`4_years`)
+
+#................
+#ols results
+#................
+
+texreg(list(ols_similarity_model[[1]],
+            ols_similarity_model[[2]],
+            ols_similarity_model[[3]],
+            ols_similarity_model[[4]]),
+       digits = 3,
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("Mean", "Median", "Standard Dev.", "Variance Coef"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment (ATT)") 
+       
+)
+
+#........................
+#fractional logit models
+#........................
+
+
+texreg(list(fractional_logit_models[[1]],
+            fractional_logit_models[[2]],
+            fractional_logit_models[[3]],
+            fractional_logit_models[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("Mean", "Median", "Standard Dev.", "Variance Coef"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment (ATT)"))
+#.......................
+#beta regression models
+#.......................
+
+texreg(list(beta_regression_models[[1]],
+            beta_regression_models[[2]],
+            beta_regression_models[[3]],
+            beta_regression_models[[4]]),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("Mean", "Median", "Standard Dev.", "Variance Coef"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment (ATT) ",
+                             "Precision: (phi)"))

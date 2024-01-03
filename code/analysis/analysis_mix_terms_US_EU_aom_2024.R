@@ -376,6 +376,17 @@ ggplot(atts_count_combined_plotting, aes(x = att, y = reorder(yname, att), color
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(y = "Variable", x = "Average Treatment Effect (ATT)", color = "Model Type")
 
+## FOR AOM 2024: only unbalanced
+
+ggplot(info_unbalanced, aes(x = att, y = reorder(yname, att))) +
+  geom_point() +
+  geom_errorbar(aes(xmin = ci_lower, xmax = ci_upper), 
+                width = 0.2) +
+  coord_flip() +  # Flips the axes before adding other components
+  geom_vline(xintercept = 0.00 , color = "red", linewidth = 0.5, linetype = "solid") +  # Add a horizontal line, increase size for visibility
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(y = "Terms in songs", x = "Average Treatment Effect (ATT)")
 
 
 ####---------------------- Analysis term intensity DiD package C & S'A ----------------#####
@@ -537,6 +548,16 @@ ggplot(atts_prop_combined_plotting, aes(x = att, y = reorder(yname, att), color 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(y = "Variable", x = "Average Treatment Effect (ATT)", color = "Model Type")
 
+#FOR AOM 2024: only unbalanced
 
 
+ggplot(info_prop_unbalanced, aes(x = att, y = reorder(yname, att))) +
+  geom_point() +
+  geom_errorbar(aes(xmin = ci_lower, xmax = ci_upper), 
+                width = 0.2) +
+  coord_flip() +  # Flips the axes before adding other components
+  geom_vline(xintercept = 0.00 , color = "red", linewidth = 0.5, linetype = "solid") +  # Add a horizontal line, increase size for visibility
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(y = "Terms in songs divided by total songs", x = "Average Treatment Effect (ATT)")
 
