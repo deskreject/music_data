@@ -448,26 +448,26 @@ df_filtered <- df_filtered %>%
 
 # Step 2: Cosine Similarity Calculation
 # Define a function to calculate aggregated similarity statistics within each group
-calculate_similarity_stats <- function(df) {
-  # Convert to matrix for faster computation
-  relevant_columns <- as.matrix(df[, c("danceability", "energy", "loudness", "mode", "speechiness",
-                                       "acousticness", "instrumentalness", "liveness", "valence",
-                                       "tempo", "duration_ms", paste("key_", 0:11, sep=""),
-                                       paste("time_signature_", c(0, 1, 3, 4, 5), sep=""))])
-  
-  # Calculate pairwise cosine similarity
-  similarity_matrix <- proxy::simil(relevant_columns, method = "cosine")
-  similarities <- similarity_matrix[upper.tri(similarity_matrix)]
-  
-  # Calculate statistics
-  mean_similarity <- mean(similarities, na.rm = TRUE)
-  median_similarity <- median(similarities, na.rm = TRUE)
-  sd_similarity <- sd(similarities, na.rm = TRUE)
-  cv_similarity <- sd_similarity / mean_similarity  # Coefficient of variation
-  
-  return(c(mean = mean_similarity, median = median_similarity, 
-           sd = sd_similarity, cv = cv_similarity))
-}
+  calculate_similarity_stats <- function(df) {
+    # Convert to matrix for faster computation
+    relevant_columns <- as.matrix(df[, c("danceability", "energy", "loudness", "mode", "speechiness",
+                                         "acousticness", "instrumentalness", "liveness", "valence",
+                                         "tempo", "duration_ms", paste("key_", 0:11, sep=""),
+                                         paste("time_signature_", c(0, 1, 3, 4, 5), sep=""))])
+    
+    # Calculate pairwise cosine similarity
+    similarity_matrix <- proxy::simil(relevant_columns, method = "cosine")
+    similarities <- similarity_matrix[upper.tri(similarity_matrix)]
+    
+    # Calculate statistics
+    mean_similarity <- mean(similarities, na.rm = TRUE)
+    median_similarity <- median(similarities, na.rm = TRUE)
+    sd_similarity <- sd(similarities, na.rm = TRUE)
+    cv_similarity <- sd_similarity / mean_similarity  # Coefficient of variation
+    
+    return(c(mean = mean_similarity, median = median_similarity, 
+             sd = sd_similarity, cv = cv_similarity))
+  }
 
 # Step 3: Parallel Processing
 # Get the number of cores

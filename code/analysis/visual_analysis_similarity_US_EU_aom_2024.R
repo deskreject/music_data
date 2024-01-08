@@ -25,6 +25,7 @@ labels_year_similarity_df <- labels_year_similarity_df %>%
 #extract the dependent variables
 
 dependent_variables <- names(labels_year_similarity_df[,9:12])
+names_dv <- c("mean similarity", "median similarity", "Standard Deviation", "Coefficient of Variation")
 
 
 # distribution of variables
@@ -46,11 +47,15 @@ do.call(grid.arrange, c(plot_list_distribution, ncol = 2, nrow = 2))
 
 # distribution of variables - by whether is US or is not US
 
-plot_list_distribution_by_US <- lapply(dependent_variables, function(dv){
+plot_list_distribution_by_US <- lapply(seq_along(dependent_variables), function(i){
   
   labels_year_similarity_df %>% 
-    ggplot(aes(x = .[[dv]], fill = as.factor(is_US))) +  # Add fill = "is_US" for grouping
-    geom_histogram(bins = 50, position = "identity", alpha = 0.5)  # Set alpha for transparency
+    ggplot(aes(x = .data[[dependent_variables[[i]]]], fill = as.factor(is_US))) +  # Add fill = "is_US" for grouping
+    geom_histogram(bins = 70, position = "identity", alpha = 0.5) +  # Set alpha for transparency
+    labs(title = paste0("Distribution of ", names_dv[[i]]), fill = "US (1) vs Europe (0)") +
+    xlim(0,1) +
+    theme_minimal()
+    
   
   
 })

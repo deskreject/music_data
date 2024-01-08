@@ -19,17 +19,16 @@ release_labels_merged_unique_tracks  <- readRDS(here::here("data", "interim_data
 
 ##IMPORTANT - MAKE SURE THERE ARE MAX 30 COLUMNS
 # Generate "_found" versions of terms for column names
-term_cols <- colnames(release_labels_merged_unique_tracks[15:30])
+term_cols <- colnames(release_labels_merged_unique_tracks[15:29])
 
 # Step 1: Calculate count of each term
 counts <- release_labels_merged_unique_tracks %>%
   group_by(release_year, release_country, label_name) %>%
-  summarise(across(all_of(term_cols), sum, .names = "{.col}_count"))
+  summarise(across(all_of(term_cols), sum, .names = "{.col}_count"),
+            count_total = n()) %>%
+  ungroup()
 
-# Step 2: Create a total count column
-counts <- counts %>%
-  rowwise() %>%
-  mutate(count_total = sum(c_across(ends_with("_count")), na.rm = TRUE))
+counts$any_term_count <- rowSums(counts[,4:18])
 
 # Step 3: Calculate proportions for each term, handling division by zero and rounding to 3 decimal places
 proportions <- counts %>%
@@ -40,17 +39,12 @@ proportions <- counts %>%
 
 
 # Combine counts and proportions
-final_df <- counts %>%
+df_combined <- counts %>%
   bind_cols(proportions %>% select(ends_with("_prop")))
 
-# Clean up for final output
-df_combined <- final_df %>%
-  ungroup()
 
 # add in total number of songs
-df_combined$total_songs = round(ifelse(df_combined$any_term_count_prop == 0,
-                                 0,
-                                 df_combined$any_term_count/df_combined$any_term_count_prop),1)
+df_combined$total_songs = df_combined$count_total
 
 #add in the is_us variable
 
@@ -560,4 +554,74 @@ ggplot(info_prop_unbalanced, aes(x = att, y = reorder(yname, att))) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(y = "Terms in songs divided by total songs", x = "Average Treatment Effect (ATT)")
+
+
+#### ------------ AOM 2024 TABLES: submission ------------------ ####
+
+#................................................
+# the table describing number of terms by region
+#...............................................
+
+library(xtable)
+
+# Define the columns for counts and proportions
+count_columns <- grep("_count$", names(df_combined), value = TRUE)
+prop_columns <- grep("_count_prop$", names(df_combined), value = TRUE)
+
+
+# Summarize data for the US
+summarized_data_US <- df_combined %>%
+  filter(is_US == 1) %>%
+  summarize(across(all_of(count_columns), sum, na.rm = TRUE)) %>%
+  pivot_longer(cols = everything(), names_to = "term", values_to = "number_US")
+
+summarized_data_US <- summarized_data_US %>%
+  mutate(proportion_US = df_combined %>%
+           filter(is_US == 1) %>%
+           summarize(across(all_of(count_columns), mean, na.rm = TRUE)) %>%
+           pivot_longer(cols = everything(), values_to = "proportion_US") %>%
+           pull(proportion_US))
+
+# Summarize data for Europe
+summarized_data_Europe <- df_combined %>%
+  filter(is_US == 0) %>%
+  summarize(across(all_of(count_columns), sum, na.rm = TRUE)) %>%
+  pivot_longer(cols = everything(), names_to = "term", values_to = "number_Europe")
+
+summarized_data_Europe <- summarized_data_Europe %>%
+  mutate(proportion_Europe = df_combined %>%
+           filter(is_US == 0) %>%
+           summarize(across(all_of(count_columns), mean, na.rm = TRUE)) %>%
+           pivot_longer(cols = everything(), values_to = "proportion_Europe") %>%
+           pull(proportion_Europe))
+
+# Combine the summaries for US and Europe
+final_data <- full_join(summarized_data_Europe, summarized_data_US, by = "term")
+
+# Clean the term names
+final_data$term <- gsub("_found_count", "", final_data$term)
+
+# Add total songs row
+total_songs <- df_combined %>%
+  summarize(total_songs_Europe = sum(total_songs[is_US == 0], na.rm = TRUE),
+            total_songs_US = sum(total_songs[is_US == 1], na.rm = TRUE))
+
+final_data <- bind_rows(final_data, 
+                        tibble(term = "Total Songs",
+                               number_Europe = total_songs$total_songs_Europe,
+                               proportion_Europe = NA,
+                               number_US = total_songs$total_songs_US,
+                               proportion_US = NA))
+
+#adjusting proportions to be percentage
+final_data$proportion_Europe <- (final_data$number_Europe/231931)*100
+final_data$proportion_US <- (final_data$number_US/142939)*100
+
+# Order the columns correctly
+final_data <- final_data %>%
+  select(term, number_Europe, proportion_Europe, number_US, proportion_US)
+
+
+# Assuming final_data has five columns: term, number_Europe, proportion_Europe, number_US, proportion_US
+print(xtable(final_data, align = "lccccr"), include.rownames = FALSE, )
 

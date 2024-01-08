@@ -134,7 +134,7 @@ ggplot(info_songs, aes(x = yname, y = att)) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
   geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
   theme_minimal() +
-  labs(y = "Time around treatment", x = "Average Treatment Effect (ATT)") +
+  labs(x = "Time around treatment", y = "Average Treatment Effect (ATT)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
@@ -583,7 +583,7 @@ ggplot(info_similarity, aes(x = yname, y = att, color = as.factor(time))) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), position = position_dodge(width = 0.25), width = 0.2) +
   geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
   theme_minimal() +
-  labs(y = "Variable", x = "Average Treatment Effect (ATT)", color = "Time Interval") +
+  labs(x = "Variable", y = "Average Treatment Effect (ATT)", color = "Time Interval in years") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #...................
@@ -608,8 +608,67 @@ descriptives_by_group_treatment <- labels_year_similarity_df %>%
 
 #### ------------------- AOM 2024 TABLES: US vs Europe similarity indiator analysis 4 years  ------- ####
 
+#...........................................
+# Descriptives of the similarity variables
+#..........................................
+
+table_for_descriptives <- labels_year_similarity_df %>%
+  dplyr::select(n_songs,
+                mean,
+                median,
+                sd,
+                cv,
+                is_US) %>%
+  rename("1 Number of Songs" = "n_songs",
+         "2 Mean Cosine Similarity" = "mean",
+         "3 Median Cosine Similarity" = "median",
+         "4 Standard Deviation" = "sd",
+         "5 Coefficient of Variation" = "cv",
+         "6 Label Released Songs in US" = "is_US")
+
+
+# Load necessary libraries
+#if (!require(Hmisc)) install.packages("Hmisc"); library(Hmisc) #for corr table
+library(psych)
+library(Hmisc)
+library(xtable)
+
+
+# Assuming 'table_for_descriptives' is your dataframe
+# Calculate descriptive statistics
+descriptives <- as.data.frame(psych::describe(table_for_descriptives))
+
+# Select relevant statistics
+selected_stats <- descriptives %>% dplyr::select(mean, median, min, max, n)
+
+# Calculate the correlation matrix
+cor_matrix <- rcorr(as.matrix(table_for_descriptives))$r  # If you want p-values or n, use '$P' or '$n' respectively
+
+# Convert statistics dataframe to matrix and transpose it, so variables become columns
+stats_matrix <- as.matrix(t(selected_stats))
+
+# Make sure the row names of both matrices match and are in the same order
+rownames(cor_matrix) <- colnames(stats_matrix)
+
+# Remove off-diagonal elements by replacing them with NA
+cor_matrix[upper.tri(cor_matrix)] <- NA
+
+# Replace column names with numbers for cor_matrix
+colnames(cor_matrix) <- seq_len(ncol(cor_matrix))
+
+# Combine the matrices below eachother
+combined_matrix <- rbind(cor_matrix, stats_matrix)
+
+# Convert the combined matrix to LaTeX code
+latex_table <- xtable(combined_matrix, align = c("l", rep("r", ncol(combined_matrix))))
+print(latex_table, type = "latex", include.rownames = TRUE, floating = FALSE,
+                    sanitize.text.function = function(x) {x <- gsub("NA", "", x); return(x)})
+
+# Output the LaTeX code to a file
+
+
 #.........
-# DiD
+# DRDiD
 #.........
 
 #install package xtable
