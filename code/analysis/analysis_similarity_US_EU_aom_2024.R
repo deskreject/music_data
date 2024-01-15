@@ -364,7 +364,7 @@ texreg(list(beta_regression_models[[1]],
 
 
 
-#### -------------------- moderator variable estimation -----------------####
+#### -------------------- moderator variable estimation: Triple Interaction -----------------####
 
 #if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
 #if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
@@ -469,13 +469,13 @@ texreg(list(beta_regression_models_mod_maj[[1]],
                              "Precision: (phi)"))
 
 
-#......................
-# sample split
-#......................
+
+#### -------------- moderator variable estimation:  sample split ---------------------------------- ####
 
 split_major <- split(labels_year_similarity_df, labels_year_similarity_df$is_major_label)
 names(split_major) <- c("indie", "major")
 
+#ols
 OLS_similarity_sample_split <- lapply(split_major, function(label){
   
   models <- lapply(dependent_variables, function(dv){
@@ -489,6 +489,79 @@ OLS_similarity_sample_split <- lapply(split_major, function(label){
   names(models) <- paste0(dependent_variables)
   return(models)
   
+})
+
+#fractional logit
+
+frac_logit_similarity_sample_split <- lapply(split_major, function(label){
+  
+  models <- lapply(dependent_variables, function(dv){
+    
+    formula <- as.formula(paste(dv, "~ is_US * post_treatment"))
+    
+    glm(formula, family = quasibinomial(link = "logit"), data = label)
+    
+  })
+  
+  names(models) <- paste0(dependent_variables)
+  return(models)
+  
+})
+
+#beta regression
+
+beta_reg_similarity_sample_split <- lapply(split_major, function(label){
+  
+  models <- lapply(dependent_variables, function(dv){
+    
+    formula <- as.formula(paste(dv, "~ is_US * post_treatment"))
+    
+    betareg(formula, data = label)
+    
+  })
+  
+  names(models) <- paste0(dependent_variables)
+  return(models)
+  
+})
+
+#.......
+#DR DiD
+#......
+
+#Group attgt
+
+DRDID_similarity_sample_split_temp <- lapply(split_major, function(label){
+  
+  models <- lapply(dependent_variables, function(dv){
+    
+    att_gt(yname = dv,
+           tname = "period",
+           idname = "label_id",
+           gname = "is_US",
+           data = label,
+           allow_unbalanced_panel = TRUE,
+           bstrap = T,
+           cband = F,
+           clustervars = "label_id")
+    
+  })
+  
+  names(models) <- paste0(dependent_variables)
+  return(models)
+  
+})
+
+# the aggregated ATTs
+
+DRDID_similarity_sample_split <- lapply(DRDID_similarity_sample_split_temp, function(list){
+  
+  lapply(list, function(model){
+  
+  aggte(model, type = 'simple')
+  
+})
+    
 })
 
 #........
@@ -506,6 +579,43 @@ texreg(list(OLS_similarity_sample_split$indie$mean,
             OLS_similarity_sample_split$major$cv),
        digits = 3,
        stars = c(0.001, 0.01, 0.05, 0.1) )
+
+#fract logit
+
+texreg(list(frac_logit_similarity_sample_split$indie$mean,
+            frac_logit_similarity_sample_split$major$mean,
+            frac_logit_similarity_sample_split$indie$median,
+            frac_logit_similarity_sample_split$major$median,
+            frac_logit_similarity_sample_split$indie$sd,
+            frac_logit_similarity_sample_split$major$sd,
+            frac_logit_similarity_sample_split$indie$cv,
+            frac_logit_similarity_sample_split$major$cv),
+       digits = 3,
+       stars = c(0.001, 0.01, 0.05, 0.1) )
+
+#beta regression
+
+texreg(list(beta_reg_similarity_sample_split$indie$mean,
+            beta_reg_similarity_sample_split$major$mean,
+            beta_reg_similarity_sample_split$indie$median,
+            beta_reg_similarity_sample_split$major$median,
+            beta_reg_similarity_sample_split$indie$sd,
+            beta_reg_similarity_sample_split$major$sd,
+            beta_reg_similarity_sample_split$indie$cv,
+            beta_reg_similarity_sample_split$major$cv),
+       digits = 3,
+       stars = c(0.001, 0.01, 0.05, 0.1) )
+
+# DR DID
+
+# Function to create LaTeX table from a given list of models
+# ---> FUNCTION NECESSARY FROM "AOM 2024 TABLES" 
+
+#indie labels
+create_latex_table(DRDID_similarity_sample_split$indie)
+# major labels
+create_latex_table(DRDID_similarity_sample_split$major)
+
 
 
 ####--------------------- Varying time windows --------------------------####
@@ -618,13 +728,15 @@ table_for_descriptives <- labels_year_similarity_df %>%
                 median,
                 sd,
                 cv,
-                is_US) %>%
+                is_US,
+                is_major_label) %>%
   rename("1 Number of Songs" = "n_songs",
          "2 Mean Cosine Similarity" = "mean",
          "3 Median Cosine Similarity" = "median",
          "4 Standard Deviation" = "sd",
          "5 Coefficient of Variation" = "cv",
-         "6 Label Released Songs in US" = "is_US")
+         "6 Label Released Songs in US" = "is_US",
+         "7 Major record label" = "is_major_label")
 
 
 # Load necessary libraries
@@ -662,7 +774,9 @@ combined_matrix <- rbind(cor_matrix, stats_matrix)
 # Convert the combined matrix to LaTeX code
 latex_table <- xtable(combined_matrix, align = c("l", rep("r", ncol(combined_matrix))))
 print(latex_table, type = "latex", include.rownames = TRUE, floating = FALSE,
-                    sanitize.text.function = function(x) {x <- gsub("NA", "", x); return(x)})
+      #make sideways
+      tabular.environment = 'sidewaystable',
+      sanitize.text.function = function(x) {x <- gsub("NA", "", x); return(x)})
 
 # Output the LaTeX code to a file
 
@@ -762,3 +876,80 @@ texreg(list(beta_regression_models[[1]],
                              "post treatment",
                              "US based*post treatment (ATT) ",
                              "Precision: (phi)"))
+
+
+#### -------- ISTO regression tables: By DV rather than model --------------------------- #####
+
+#......................
+# MAIN ANALYSIS Looped - by DV
+#......................
+
+lapply(seq_along(1:4), function(i){
+
+texreg(list(ols_similarity_model[[i]],
+            fractional_logit_models[[i]],
+            beta_regression_models[[i]],
+            beta_regression_models[[i]]),
+       digits = 3,
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("OLS", "Frac. Log.", "Beta", "DR DID"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment (ATT)",
+                             "precision: (phi)")
+)
+})
+
+#.........................
+# MODERATOR: Major v indie
+#.........................
+
+# triple DiD
+
+#beta regression models
+texreg(list(ols_similarity_model_mod_maj[[3]],
+            fractional_logit_models_mod_maj[[3]],
+            beta_regression_models_mod_maj[[3]]),
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       digits = 3,
+       custom.model.names = c("OLS", "Frac. Log.", "Beta"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "is major label",
+                             "US based*post treatment",
+                             "US based*major label",
+                             "post treatment*major label",
+                             "Triple interaction",
+                             "Precision: (phi)"))
+
+# sample split
+texreg(list(OLS_similarity_sample_split$indie$sd,
+            OLS_similarity_sample_split$major$sd,
+            frac_logit_similarity_sample_split$indie$sd,
+            frac_logit_similarity_sample_split$major$sd,
+            beta_reg_similarity_sample_split$indie$sd,
+            beta_reg_similarity_sample_split$major$sd,
+            beta_reg_similarity_sample_split$indie$sd,
+            beta_reg_similarity_sample_split$major$sd),
+       digits = 3,
+       stars = c(0.001, 0.01, 0.05, 0.1),
+       custom.model.names = c("Indie", "Major",
+                              "Indie", "Major",
+                              "Indie", "Major",
+                              "Indie", "Major"),
+       custom.coef.names = c("Intercept",
+                             "US based",
+                             "post treatment",
+                             "US based*post treatment (ATT)",
+                             "precision: (phi)"))
+
+#Dr DiD
+# ---> FUNCTION NECESSARY FROM "AOM 2024 TABLES" 
+
+#indie labels
+create_latex_table(DRDID_similarity_sample_split$indie)
+# major labels
+create_latex_table(DRDID_similarity_sample_split$major)
+
