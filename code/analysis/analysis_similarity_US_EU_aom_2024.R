@@ -47,7 +47,6 @@ labels_year_similarity_df$cv  <- if_else(labels_year_similarity_df$cv > 1,
                                          0.9999,
                                          labels_year_similarity_df$cv)
 
-
 ####------------------- Number of songs: US vs Europe ----------------- #####
 
 #if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
@@ -73,6 +72,7 @@ library(texreg)
 time <- seq(1,4)
 
 # loop estimation - balanced
+
 
 model_list_songs_time <- lapply(time, function(t){
   
@@ -137,6 +137,97 @@ ggplot(info_songs, aes(x = yname, y = att)) +
   labs(x = "Time around treatment", y = "Average Treatment Effect (ATT)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+####------------------- Number of artists: US vs Europe ----------------- #####
+
+#if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
+#if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
+#if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
+#if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
+#if (!require(texreg)) install.packages("texreg"); library(texreg) #creating tables for latex
+#if (!require(betareg)) install.packages("betareg"); library(betareg) #beta regression
+
+
+library(did)
+library(fixest)
+library(lfe)
+library(alpaca)
+library(texreg)
+
+#..................
+# ATT varying over time for number of artists
+#..................
+
+#time sequence
+
+time <- seq(1,4)
+
+# loop estimation - balanced
+
+
+model_list_artists_time <- lapply(time, function(t){
+  
+  df_new <- labels_year_similarity_df %>% 
+    filter(period <= t, period >= (t-1)*-1)
+  
+  models <- att_gt(yname = "n_artists",
+         tname = "period",
+         idname = "label_id",
+         gname = "is_US",
+         data = df_new,
+         allow_unbalanced_panel = TRUE,
+         bstrap = T,
+         cband = F,
+         clustervars = "label_id")
+  
+  print(t)
+  
+  return(models)
+}
+)
+
+names(model_list_artists_time) <- paste0(time, "_years")
+
+#eventstudy
+# create plots - no controls
+
+event_plot_artists <- ggdid(model_list_artists_time[[4]],
+                          title = "Eventustdy number of artists",
+                          ylab = "change in number of artists compared to base period")
+
+
+event_plot_artists
+
+# summarise models 
+
+att_artists_time <- lapply(model_list_artists_time, function(model) {
+  aggte(model, type = 'simple')
+})
+
+# Modify the data extraction function to include 'time'
+extract_artists_model_info <- function(model_list) {
+  lapply(model_list, function(model) {
+    data.frame(
+      yname = model$DIDparams$yname,
+      att = model$overall.att,
+      ci_lower = model$overall.att - 1.96 * model$overall.se,
+      ci_upper = model$overall.att + 1.96 * model$overall.se
+    )
+  })
+}
+
+info_artists <- do.call(rbind, extract_artists_model_info(att_artists_time))
+info_artists$yname <- paste0(time, "_years")
+
+# Plot the ATTs with time as a grouping aesthetic
+
+# Updated ggplot code without 'coord_flip' and with axis labels corrected
+ggplot(info_artists, aes(x = yname, y = att)) +
+  geom_point()  +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
+  theme_minimal() +
+  labs(x = "Time around treatment", y = "Average Treatment Effect (ATT)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 #####----------------- DiD analysis: US vs Europe similarity indiator analysis over 4 years ------ #####

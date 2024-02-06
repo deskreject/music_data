@@ -407,7 +407,7 @@ columns_to_normalize <- c("danceability", "energy", "loudness", "mode", "speechi
                           "tempo", "duration_ms")
 
 # Applying min-max normalization
-labels_country_audio_char_naless_unique[columns_to_normalize] <- lapply(labels_country_audio_char_naless_unique_test[columns_to_normalize],
+labels_country_audio_char_naless_unique[columns_to_normalize] <- lapply(labels_country_audio_char_naless_unique[columns_to_normalize],
                                                                         function(x) {
   (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
 })
@@ -485,18 +485,43 @@ similarity_results_df_transf <- as.data.frame(similarity_results_df, stringsAsFa
 # Remove row names for the dataframe
 rownames(similarity_results_df_transf) <- NULL
 
+#exit the prallel processing
+plan(sequential)
 
 # Step 4: do the merging process - create a dataframe grouped by label year with relevant variables for later analysis
+## number of songs
+## number of artists
 
-label_year_similarity_df <- labels_country_audio_char_naless_unique %>% 
+label_year_similarity_df <- labels_country_audio_char_naless_unique %>%
+  
+  # First, get a distinct dataset for artists to accurately count n_artists
+  
+  group_by(release_year, label_name_new) %>%
+  distinct(artist_mbid) %>%
+  summarise(n_artists = n(), .groups = 'drop') %>%
+  
+  # Join this back to the original dataset to distribute n_artists correctly
+  
+  right_join(labels_country_audio_char_naless_unique, by = c("release_year", "label_name_new")) %>%
+  
+  # Now group by all the intended variables for n_songs calculation
+  
   group_by(release_year,
            label_name_new,
            label_name,
            is_US,
            is_international,
            is_major_label,
-           label_year) %>% 
-  summarise(n_songs = n())
+           label_year) %>%
+  
+  # Calculate n_songs and carry over n_artists
+  
+  summarise(n_songs = n(), 
+            
+            # Ensure n_artists is correctly assigned; this takes the first (identical) value per group
+            
+            n_artists = first(n_artists), 
+            .groups = 'drop')
 
 #change to string
 label_year_similarity_df$label_year <- as.character(label_year_similarity_df$label_year)
