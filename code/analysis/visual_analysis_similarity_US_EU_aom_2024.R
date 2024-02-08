@@ -24,9 +24,13 @@ labels_year_similarity_df <- labels_year_similarity_df %>%
 
 #extract the dependent variables
 
-dependent_variables <- names(labels_year_similarity_df[,9:12])
-names_dv <- c("mean similarity", "median similarity", "Standard Deviation", "Coefficient of Variation")
+#AOM 2024 
+#dependent_variables <- names(labels_year_similarity_df[,10:13])
+#names_dv <- c("mean similarity", "median similarity", "Standard Deviation", "Coefficient of Variation")
 
+#SMS 2024 - no CV
+dependent_variables <- names(labels_year_similarity_df[,10:12])
+names_dv <- c("mean similarity", "median similarity", "Standard Deviation")
 
 # distribution of variables
 
@@ -51,7 +55,7 @@ plot_list_distribution_by_US <- lapply(seq_along(dependent_variables), function(
   
   labels_year_similarity_df %>% 
     ggplot(aes(x = .data[[dependent_variables[[i]]]], fill = as.factor(is_US))) +  # Add fill = "is_US" for grouping
-    geom_histogram(bins = 70, position = "identity", alpha = 0.5) +  # Set alpha for transparency
+    geom_histogram(bins = 100, position = "identity", alpha = 0.5) +  # Set alpha for transparency
     labs(title = paste0("Distribution of ", names_dv[[i]]), fill = "US (1) vs Europe (0)") +
     xlim(0,1) +
     theme_minimal()
@@ -64,4 +68,4 @@ plot_list_distribution_by_US <- lapply(seq_along(dependent_variables), function(
 names(plot_list_distribution_by_US) <- paste0(dependent_variables)
 
 #create grid - balanced plots
-do.call(grid.arrange, c(plot_list_distribution_by_US, ncol = 2, nrow = 2))
+do.call(grid.arrange, c(plot_list_distribution_by_US, ncol = 1, nrow = 3))

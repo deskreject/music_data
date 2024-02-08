@@ -226,8 +226,33 @@ ggplot(info_artists, aes(x = yname, y = att)) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
   geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
   theme_minimal() +
-  labs(x = "Time around treatment", y = "Average Treatment Effect (ATT)") +
+  labs(title = "Number of Artists",
+       x = "Time around treatment",
+       y = "Average Treatment Effect (ATT)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#......
+# fixest eventstudy plots
+#......
+
+#eventstudy with fixed effects on artist level
+eventstudy_fe_n_artist = feols(n_artists ~  i(period, is_US, ref = 0) |label_id ,cluster=~label_id,
+                        labels_year_similarity_df)
+
+#plot
+iplot(eventstudy_fe_n_artist,
+      ref.line = c(0),
+      ci.col='navy',
+      ci_level=0.95,
+      main="",
+      xlab="years since Billboard policy change",
+      ylab="")
+
+#treatment effects
+did_fe_n_artist <- feols(n_artists ~  post_treatment*is_US |label_id ,cluster=~label_id,
+                         labels_year_similarity_df)
+
+summary(did_fe_n_artist)
 
 
 #####----------------- DiD analysis: US vs Europe similarity indiator analysis over 4 years ------ #####
@@ -254,7 +279,11 @@ library(betareg)
 
 #extract the dependent variables
 
-dependent_variables <- names(labels_year_similarity_df[,9:12])
+#AOM based - all including the coefficient of variance
+#dependent_variables <- names(labels_year_similarity_df[,10:13])
+
+#SMS based - excluding coefficients of variance
+dependent_variables <- names(labels_year_similarity_df[,10:12])
 
 # loop estimation - no controls
 
@@ -319,8 +348,8 @@ names(event_plots_similarity) <- paste0(dependent_variables)
 names(event_plots_similarity_controls) <- paste0(dependent_variables)
 
 #create grid - balanced plots
-do.call(grid.arrange, c(event_plots_similarity, ncol = 2, nrow = 2))
-do.call(grid.arrange, c(event_plots_similarity_controls, ncol = 2, nrow = 2))
+do.call(grid.arrange, c(event_plots_similarity, ncol = 3, nrow = 1))
+do.call(grid.arrange, c(event_plots_similarity_controls, ncol = 3, nrow = 1))
 
 # summarise models 
 
@@ -712,8 +741,10 @@ create_latex_table(DRDID_similarity_sample_split$major)
 ####--------------------- Varying time windows --------------------------####
 
 #extract the dependent variables
-
-dependent_variables <- names(labels_year_similarity_df[,9:12])
+#AOM 2024 based
+#dependent_variables <- names(labels_year_similarity_df[,10:13])
+#SMS 2024 based - no CV
+dependent_variables <- names(labels_year_similarity_df[,10:12])
 
 #time sequence
 
@@ -784,7 +815,10 @@ ggplot(info_similarity, aes(x = yname, y = att, color = as.factor(time))) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), position = position_dodge(width = 0.25), width = 0.2) +
   geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
   theme_minimal() +
-  labs(x = "Variable", y = "Average Treatment Effect (ATT)", color = "Time Interval in years") +
+  labs(title = "ATT plots for similarity coefficients with varying time windows",
+       x = "Variable",
+       y = "Average Treatment Effect (ATT)",
+       color = "Time Interval in years") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #...................
