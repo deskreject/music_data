@@ -99,7 +99,8 @@ df_musicbrainz_v6_isrcs <- fromJSON(here::here("data", "raw_data", "musicbrainz"
 #labels associated to ISRCs for DE, GB, Fr, US, IT, v1 
 releases_labels_v1 <- read.csv(here::here("data", "raw_data", "musicbrainz", "label_information", "releases_labels_v1_AD.csv"))
 
-
+#my export from sql (12.2023) 
+release_labels_AS_v1 <- read.csv(here::here("data", "interim_data", "mb_sql_tables", "labelnames_type_country_date_AD.csv"))
 
 #......................
 # Spotify data
@@ -118,9 +119,11 @@ spotify_acoustic_char_v2 <- fromJSON(here::here("data", "raw_data", "Spotify", "
 #import the list that was transformed from json to csv that includes isrcs
 isrc_spotify_id_check_data <- read.csv(here::here("data", "incidental", "spotify_related", "last_step_song_characteristics_df_sample_post_test_1.csv"))
 
-#30.11.2023 Alessio's full data as csv
+#30.11.2023 Alessio's full US data as csv
 spotify_audio_characteristics <- read.csv(here::here("data", "raw_data", "Spotify", "AD_spotify_accoustic_char_250k.csv"))
 
+#08.12.2023 Alessio's full US + EU data as csv
+spotify_audio_characteristics_EU_US <- read.csv((here::here("data", "raw_data", "Spotify", "AD_spotify_acoustic_char_US_EU.csv")))
 
 #.......................
 # loading processed data
