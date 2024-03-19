@@ -1,0 +1,420 @@
+[33mcommit 78bdc3ef51fa8cf43829e5848ef48d741098da2b[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: Alexander Staub <staub_alex@yahoo.com>
+Date:   Wed Dec 6 20:25:55 2023 +0100
+
+    added sql code and the first sql export table with label, country and date info
+
+[33mcommit daff78dcc36e28a13d9b7b3d46de188e17afa453[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Dec 6 19:14:18 2023 +0100
+
+    changed column name of the csv for psql import
+
+[33mcommit bfbac651df185320e5bd995fa80d690a6654d7af[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Dec 6 19:05:01 2023 +0100
+
+    created script for sql data processing related to pulling back label names
+
+[33mcommit 08bfd269cef85a0b7e81b04d08f93c5e961b0239[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Dec 4 18:00:02 2023 +0100
+
+     added the code to read in the label information as well as country information for isrcs that were released 8 years around shock
+
+[33mcommit 05eeb9afcd96a188c68829215c2207c14d311160[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Nov 30 14:55:29 2023 +0100
+
+    correct complete spotify data proivded by alessio
+
+[33mcommit 74a2781f17f121051fdc157882bb1967a6370b0b[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Nov 27 20:18:26 2023 +0100
+
+    tried analyzing the new spotify data, but got stuck given the json data structure
+
+[33mcommit 9cfca7b17fe3f107139cbbfd81fea8d793ffd020[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Nov 27 16:20:11 2023 +0100
+
+    transformed dataset into csv so that it can be read in as a df
+
+[33mcommit 7de3536f0be271a32d6d71ef5192b7adc6fe34dc[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Nov 27 14:14:31 2023 +0100
+
+    test datasets from Alessios song characteristics spotify scrape
+
+[33mcommit 8e03aa56c15a7092f37b7459d9c41034d3d8fd42[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Nov 15 19:43:02 2023 +0100
+
+    added data on the random sample of ISRC + spotify_id stuff + the code to loop over the spotify ids
+
+[33mcommit 776ef930dfbd48ccda0a03aa756f808dfd8bdc64[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Nov 13 18:43:17 2023 +0100
+
+    added more code using the new v2 spotify data. Still have the same isrc issues
+
+[33mcommit 4a6cd11c15bb1a9c4c3027e751fa82fd41738e83[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Fri Nov 10 19:14:11 2023 +0100
+
+    checked the first 10k sample of spotify data from Alessio - some issues with ISRCs that need to be resolved as they each repeat 100 times
+
+[33mcommit b233c503b4c19e56cdd8ada7e8b29dfd41057d00[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Nov 8 16:04:16 2023 +0100
+
+    alessios pythong code lacking the saving configuration
+
+[33mcommit 4a192355bb58a1a5aa0caa85aa6dc310f5402e49[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue Nov 7 19:02:31 2023 +0100
+
+    explored Axel's data
+
+[33mcommit b94def4bb3d810e858c5944b3986171182512ca2[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Oct 19 20:35:36 2023 +0200
+
+    increased wait time for the requests to 1 request per minute but still cuts off at sub 3000 elements
+
+[33mcommit 231a68dcc9749cc6ea6ab87c042c51b133e0586a[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Oct 16 22:09:32 2023 +0200
+
+    slight changes to spotify code - still hitting rate limits
+
+[33mcommit 6b72803fe15d215ebe31497d4a510c11ed485968[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Fri Oct 13 17:11:03 2023 +0200
+
+    slight changes to sleep time implemented which did not help
+
+[33mcommit 102fc41eec20f0e83286ceb45f7d56f310e03e37[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Fri Oct 13 15:42:38 2023 +0200
+
+    started altering the code to run over the entire 400k observations, which has now ran into a rate limiting error
+
+[33mcommit 4f2b64be11dfa4ed01b656c7be31595ed0140ab0[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Oct 11 16:50:07 2023 +0200
+
+    new code file for the isrcs will be added to the remote
+
+[33mcommit 7f29ed656a42b0d6aa801cdb7a115950c800167f[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Oct 11 16:20:28 2023 +0200
+
+    data from the first spotify access using the random sample of songs with isrc codes
+
+[33mcommit 9dc2e896cf3e301730ac3af91ad05b196e820aeb[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Sep 21 15:04:04 2023 +0200
+
+     added a little bit of code for ISRC based Spotify access
+
+[33mcommit f10ed027d5d386901780b52c07879e9b7b985b65[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Sep 14 20:06:36 2023 +0200
+
+    changed the name of the environment
+
+[33mcommit 57bcb89fa84b981efb9b17f2a149740eda95a590[m
+Merge: 9f95507 466fa68
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Sep 14 19:41:58 2023 +0200
+
+    Merge branch 'main' of https://github.com/deskreject/music_data into main
+
+[33mcommit 9f9550780de3a3e7060834106a47360ac3145eca[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Sep 14 19:35:54 2023 +0200
+
+    added a conda environment for the spotify access stuff
+
+[33mcommit 466fa6893c0f0bd958baeb5720021b5ed318a18f[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Sep 14 19:29:46 2023 +0200
+
+    created random sample of songs I want to get song characteristics on
+
+[33mcommit bb58d333d9981bf8bc6638ed859628d996b51053[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Sep 13 19:31:20 2023 +0200
+
+    looked into isrcs and genres a little more
+
+[33mcommit cba232c9a8ae211712f8b30b9da101b3b421263e[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Sep 6 15:07:25 2023 +0200
+
+    added in more code to look at releases related to US and non-US
+
+[33mcommit 1480761484eded3258ff451940b0182a1c933520[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue Sep 5 18:04:12 2023 +0200
+
+    added code for the 5th export of musicbrainz, which now includes also IRCS codes
+
+[33mcommit 7118b4fd67011a5ebc65243fa8125099e301e504[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Aug 31 17:05:20 2023 +0200
+
+    completed the remix analysis proper
+
+[33mcommit d5ff601d791e7efc9239911810782f11c76fde97[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Aug 30 16:41:42 2023 +0200
+
+    created the remix term analysis for the mbv4 data
+
+[33mcommit 1ee38b704eb6439ac260e6e4517e0194d4b3e329[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Aug 2 02:16:02 2023 +0200
+
+    managed to finish the matching process for the 4th version of mb, but didn't create the datasets yet. after creating the datasets, can move on to the remix analysis
+
+[33mcommit cee00bde28b1f745abfb5d10c815f74e0ff4d087[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Fri Jul 28 19:19:14 2023 -0400
+
+     I added script on mb version 4. I removed data raw from being tracked. I added some figures and writing
+
+[33mcommit ea34f0042020aa6cc4530ebfe21b9a8553d20c0f[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Fri Jun 23 17:59:09 2023 +0200
+
+    new .gitignore file to not synch the raw data
+
+[33mcommit 8a9109c83b830aa2d2e91bc48964c93583ab26ee[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Jun 19 21:35:15 2023 +0200
+
+    merged the mb_v3 data to the hot100 data to check for matches/non_matches
+
+[33mcommit bf1921abbbe879317ffccf535e28dd69262bd9e7[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue May 30 16:59:33 2023 +0200
+
+    new hot100 chart data added from whitburn project
+
+[33mcommit ef39630a9ae0114cefb84c192722766f51f3a59b[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon May 15 19:28:47 2023 +0200
+
+    did the hot100 song level matching for the musicbrainz v2 export
+
+[33mcommit 2b6066f93390c0d767dfb784947d225e4266b784[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon May 15 17:52:42 2023 +0200
+
+    added the data for the proportion of terms - remix etc - over time
+
+[33mcommit 10ced2a0e1550c17fecea89c7436a421b12123eb[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed May 10 17:59:00 2023 +0200
+
+    slight code changes based on identification of an issue
+
+[33mcommit 0c5a1c5d87841d187bdd56b9699fd6b8ccb007d9[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue May 9 19:22:33 2023 +0200
+
+    created remix analysis first steps including visuals
+
+[33mcommit 82702e7f195d5919370d37d8f65dbee7fd334080[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon May 8 19:38:28 2023 +0200
+
+    managed to merge the data from mb v2 to hot100
+
+[33mcommit b71d8cdc7108d7244fae008b63bf0fd2fe738c67[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue Apr 25 18:39:46 2023 +0200
+
+    first code to wrangle new data
+
+[33mcommit 3a1a87f22f82d85f1d0ca003493698e0c1bf1b92[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue Apr 25 18:39:31 2023 +0200
+
+    new data from alessio
+
+[33mcommit 803ac54a95b79dc1368da0deb1ef672ad640b409[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue Apr 11 18:45:58 2023 +0200
+
+     altered the spotify access code to pull back the relevant audio features. In addition, added in a rest timer to pause the api access to a limit that is feasible given no researcher access atm
+
+[33mcommit d63a190e43fd46f1a684ee533dc262dbde30e30a[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue Mar 28 19:25:06 2023 +0200
+
+     I have put in the code to loop over a random sample from the main dataframe from the merged HH and MB data, and access the spotify api for some song level information. Not stress test for rate limits or all the information we require for analysis
+
+[33mcommit 5d7aa258c41e6efd185213bd857a24c5d81c4d8a[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue Mar 21 12:17:18 2023 +0100
+
+    added some first code for the spotify access in python
+
+[33mcommit 9b0c9601d90344b66e39e7a018a571af7f452214[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Mar 1 18:35:32 2023 +0100
+
+    some small additions to the code based on meeting with Alessio
+
+[33mcommit 3d290ec408024e0291f05dcc488b57117465b9a1[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Tue Feb 28 17:39:32 2023 +0100
+
+    started the remix / mix analysis
+
+[33mcommit f813198c718568cb8b2c50b4fd813cee3ba73bb7[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Feb 27 19:31:45 2023 +0100
+
+    finished the merging process of hh to mb
+
+[33mcommit e88f8cdcffc38fd239da662618cc5357044b01d6[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Feb 23 17:58:54 2023 +0100
+
+    matched data 1) on the song title with a fuzzy match 2) on artist last word contained in the artist_lower.y column
+
+[33mcommit 087d9c14182dd20142990b13a1ebe787e54ff293[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Feb 22 18:19:15 2023 +0100
+
+    forgot to save the packages and data script
+
+[33mcommit d28e0bc420d8be05e0228367b39bb540275c32e0[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Feb 22 18:18:35 2023 +0100
+
+    did some more work on the matching procedures - trying to get to a dataframe that I can do the remix analysis on to understand if there was any effect
+
+[33mcommit bf8fd62e30cd46a0b4c0add9502a53e2b89987e3[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Feb 1 20:12:14 2023 +0100
+
+    still struggling to get the matching down to a level where there are only non-matches left. some artists remain annoying
+
+[33mcommit 8336e89a96b3514ba0c47d6c9d5630812d6297d9[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Jan 26 16:29:44 2023 +0100
+
+    did further work on the joining dataframes + managed to get an overview of songs with multiple matches and different mb ids
+
+[33mcommit ba27023dc269c4f40da6eb72e76a16a2a454941e[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Jan 25 18:53:05 2023 +0100
+
+    the scripts used to create the joined data between hot100 and music brainz
+
+[33mcommit d7ebcdc6be815ca00bc14c76f778e00da8cb2ab7[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Jan 25 18:52:24 2023 +0100
+
+    the data on the joining of hot 100 and music brainz
+
+[33mcommit 61cfaca2d8533b784d982084b89b0e6f4ec2870d[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Jan 18 17:52:48 2023 +0100
+
+    dataset of musicbrainz with ids added to data_raw
+
+[33mcommit 51b6ef1032d8035e5c6baeab69cb720759f56197[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Mon Jan 16 19:50:36 2023 +0100
+
+    first attempt at merging musicbrainz and hot100 data. Not possible at the moment
+
+[33mcommit 14922fa5e61a6738bcc1bbe23b1b11abab05021a[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Fri Jan 13 17:01:37 2023 +0100
+
+    new dataset from musicbrainz
+
+[33mcommit c12db159044e0428105d2c0077ebde1170f53271[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Sat Dec 24 19:30:50 2022 +0100
+
+    created the csv for Alessio to try and extract further metadata with from musicbrainz or other api
+
+[33mcommit d9d2befd457e8a08f8b4b2b7d58f84ebf58a10f4[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Sat Dec 24 14:46:20 2022 +0100
+
+    Created a script for data preparation. Wrote script to process the hot100 export for matching song and artist names to additional meta data via musicbrainz or other api
+
+[33mcommit 133aab8a1848c281de2186d6e442fdb50788144b[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Dec 21 17:04:46 2022 +0100
+
+    work on the csv in order to run the musicbrainz query
+
+[33mcommit 246b0d1fc590ecb058f1e37b61e79482ef5de6af[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Wed Dec 21 11:45:15 2022 +0100
+
+    updated the github repo with newest data and analysis
+
+[33mcommit 4479029bf5bbed323e485d732b29041cab84d448[m
+Author: SailedGraph <100946741+SailedGraph@users.noreply.github.com>
+Date:   Tue Mar 8 14:53:12 2022 +0100
+
+    Update README.md
+
+[33mcommit 56530301f31b8c729e135b34cdd7a75aaac420fa[m
+Author: SailedGraph <100946741+SailedGraph@users.noreply.github.com>
+Date:   Tue Mar 8 14:50:27 2022 +0100
+
+    Update GITHUB.R
+
+[33mcommit d628a45a021bc6ff147db3e9c9208d028031b780[m
+Author: SailedGraph <100946741+SailedGraph@users.noreply.github.com>
+Date:   Tue Mar 8 14:49:32 2022 +0100
+
+    Add files via upload
+
+[33mcommit 9d530d0720d03b8f66519ade4ed44a32433d9c4b[m[33m ([m[1;31morigin/Code[m[33m)[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Jan 6 17:00:27 2022 +0000
+
+    Update README.md
+
+[33mcommit 2f1759b426234886249623f3eeddc203742c5ab4[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Jan 6 16:59:42 2022 +0000
+
+    Update README.md
+
+[33mcommit 4daf5a5fdacea79988108d7e29fc8ff962c748e2[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Jan 6 16:59:04 2022 +0000
+
+    Update README.md
+
+[33mcommit 821a325e3f3e11a65fdca6fd364d75894cc6cae9[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Jan 6 16:58:43 2022 +0000
+
+    Update README.md
+
+[33mcommit 48368bf8a997ec0f7ac1dca698c4af6436c669e1[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Jan 6 16:58:14 2022 +0000
+
+    Update README.md
+
+[33mcommit e8e8b0c088bb3b5f7ffd1cec1ac8f9e207b43ca5[m
+Author: deskreject <staub_alex@yahoo.com>
+Date:   Thu Jan 6 16:27:10 2022 +0000
+
+    Initial commit
