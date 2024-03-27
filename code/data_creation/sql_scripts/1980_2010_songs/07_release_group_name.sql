@@ -6,6 +6,7 @@ SELECT
     r.id AS id_release,
     r.gid AS mbid_release,
     r.name AS name_release,
+	r.artist_credit AS id_artist_credit,
     r.release_group AS id_release_group,
     rg.name AS name_release_group,
     rg.type AS id_type_release_group,

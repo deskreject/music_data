@@ -4,7 +4,8 @@ SELECT
     crl.*,
     ri.mbid_release,
     ri.name_release,
-    ri.name_release_g_type
+    ri.name_release_g_type,
+	ri.id_artist_credit
 FROM created_tables.country_release_label_80_10 crl
 LEFT JOIN created_tables.release_group_type ri ON crl.id_release = ri.id_release;
 DROP TABLE created_tables.country_release_label_80_10;

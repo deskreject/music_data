@@ -1,0 +1,3 @@
+release_recording_unique_80_10 number of rows 
+- first query: 7287228 n rows
+- second query: 7291507 n rows - 1min 57 sec exectime
