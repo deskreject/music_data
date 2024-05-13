@@ -1,24 +1,29 @@
 #.............................
 # Author: Alexander Staub
-# Description: Code for similarity change analysis based on years for aom 2024
+# Description: Code for song, artist and similarity data analysis after sql export
 # Date created: 21.12.2023
 # dependencies:
-## script "data_preparation_MB_spotify_aom_2024" under "data_creation"
+## script "data_preparation_MB_sql_export_2024" under "data_creation"
 #.............................
 
 #load the necessary dataframe
-labels_year_similarity_df  <- readRDS(here::here("data", "interim_data", "similarity_scores_label_years_aom_2023.rda")) %>% 
+#with Canada
+labels_year_similarity_df  <- readRDS(here::here("data", "interim_data", "region_song_artist_releases_98_05.rda")) %>% 
+  ungroup()
+
+#without Canada
+labels_year_similarity_df  <- readRDS(here::here("data", "interim_data", "region_song_artist_releases_98_05_no_canada.rda")) %>%
   ungroup()
 
 #transform DVs to numeric
-cols_to_convert <- c("mean", "median", "sd", "cv")
-labels_year_similarity_df[, cols_to_convert] <- lapply(labels_year_similarity_df[, cols_to_convert], function(x) as.numeric(as.character(x)))
+#cols_to_convert <- c("mean", "median", "sd", "cv")
+#labels_year_similarity_df[, cols_to_convert] <- lapply(labels_year_similarity_df[, cols_to_convert], function(x) as.numeric(as.character(x)))
 
 
 #remove irrelevant years and irrelevant labels (less than three songs)
-labels_year_similarity_df <- labels_year_similarity_df %>% 
-  filter(release_year > 1997, release_year < 2006 ) %>% 
-  filter(n_songs > 2)
+#labels_year_similarity_df <- labels_year_similarity_df %>% 
+  #filter(release_year > 1997, release_year < 2006 ) %>% 
+  #filter(n_songs > 2)
 
 #add in the period variable
 labels_year_similarity_df <- labels_year_similarity_df %>%
@@ -28,7 +33,7 @@ labels_year_similarity_df <- labels_year_similarity_df %>%
   mutate(period = c(-3:4)) %>%
   left_join(labels_year_similarity_df, ., by="release_year") %>% 
   #remove NA labels otherwise they will be misclassified as NA_int and NA_ameria later on
-  filter(is.na(label_name) == F)
+  filter(is.na(label_name_new) == F)
 
 #add in the indicator variable
 labels_year_similarity_df <- labels_year_similarity_df %>% 
@@ -43,18 +48,18 @@ labels_year_similarity_df$post_treatment <- if_else(labels_year_similarity_df$re
                                                     0)
 
 #small adjustment to cv value that is above one
-labels_year_similarity_df$cv  <- if_else(labels_year_similarity_df$cv > 1,
-                                         0.9999,
-                                         labels_year_similarity_df$cv)
+#labels_year_similarity_df$cv  <- if_else(labels_year_similarity_df$cv > 1,
+ #                                        0.9999,
+  #                                       labels_year_similarity_df$cv)
 
 ####------------------- Number of songs: US vs Europe ----------------- #####
 
-#if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
-#if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
-#if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
-#if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
-#if (!require(texreg)) install.packages("texreg"); library(texreg) #creating tables for latex
-#if (!require(betareg)) install.packages("betareg"); library(betareg) #beta regression
+# if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
+# if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
+# if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
+# if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
+# if (!require(texreg)) install.packages("texreg"); library(texreg) #creating tables for latex
+# if (!require(betareg)) install.packages("betareg"); library(betareg) #beta regression
 
 
 library(did)
@@ -142,17 +147,17 @@ ggplot(info_songs, aes(x = yname, y = att)) +
 #......
 
 #eventstudy with fixed effects on songs level
-eventstudy_fe_n_songs = feols(n_songs ~  i(period, is_US, ref = 0) |label_id ,cluster=~label_id,
+eventstudy_fe_n_songs = feols(n_songs ~  i(release_year, is_US, ref = 2001) |label_id ,cluster=~label_id,
                                labels_year_similarity_df)
 
 #plot
 iplot(eventstudy_fe_n_songs,
-      ref.line = c(0),
+      ref.line = c(2001),
       ci.col='navy',
       ci_level=0.95,
-      main="",
       xlab="years since Billboard policy change",
-      ylab="")
+      ylab="",
+      main ="Event study number of songs")
 
 #treatment effects
 did_fe_n_songs <- feols(n_songs ~  post_treatment*is_US |label_id ,cluster=~label_id,
@@ -291,15 +296,15 @@ ggplot(info_artists, aes(x = yname, y = att)) +
 #......
 
 #eventstudy with fixed effects on artist level
-eventstudy_fe_n_artist = feols(n_artists ~  i(period, is_US, ref = 0) |label_id ,cluster=~label_id,
+eventstudy_fe_n_artist = feols(n_artists ~  i(release_year, is_US, ref = 2001) |label_id ,cluster=~label_id,
                         labels_year_similarity_df)
 
 #plot
 iplot(eventstudy_fe_n_artist,
-      ref.line = c(0),
+      ref.line = c(2001),
       ci.col='navy',
       ci_level=0.95,
-      main="",
+      main="Event study of number of artists",
       xlab="years since Billboard policy change",
       ylab="")
 
@@ -340,8 +345,124 @@ did_trip_fe_n_artist <- feols(n_artists ~  post_treatment*is_US*is_major_label |
 
 summary(did_trip_fe_n_artist)
 
+####------------------- Number of releases: US vs Europe ------------------------ ####
 
-#####----------------- DiD analysis: US vs Europe similarity indiator analysis over 4 years ------ #####
+#if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
+#if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
+#if (!require(alpaca)) install.packages("alpaca"); library(alpaca) #for non-linear models with multiway clustering and fixed effects
+#if (!require(did)) install.packages("did"); library(did) #for non-linear models with multiway clustering and fixed effects
+#if (!require(texreg)) install.packages("texreg"); library(texreg) #creating tables for latex
+#if (!require(betareg)) install.packages("betareg"); library(betareg) #beta regression
+
+
+library(did)
+library(fixest)
+library(lfe)
+library(alpaca)
+library(texreg)
+
+#..................
+# ATT varying over time for number of artists
+#..................
+
+#time sequence
+
+time <- seq(1,4)
+
+# loop estimation - balanced
+
+
+model_list_releases_time <- lapply(time, function(t){
+  
+  df_new <- labels_year_similarity_df %>% 
+    filter(period <= t, period >= (t-1)*-1)
+  
+  models <- att_gt(yname = "n_releases",
+                   tname = "period",
+                   idname = "label_id",
+                   gname = "is_US",
+                   data = df_new,
+                   allow_unbalanced_panel = TRUE,
+                   bstrap = T,
+                   cband = F,
+                   clustervars = "label_id")
+  
+  print(t)
+  
+  return(models)
+}
+)
+
+names(model_list_releases_time) <- paste0(time, "_years")
+
+#eventstudy
+# create plots - no controls
+
+event_plot_releases <- ggdid(model_list_releases_time[[4]],
+                            title = "Eventustdy number of releases",
+                            ylab = "change in number of releases compared to base period")
+
+
+event_plot_releases
+
+# summarise models 
+
+att_releases_time <- lapply(model_list_releases_time, function(model) {
+  aggte(model, type = 'simple')
+})
+
+# Modify the data extraction function to include 'time'
+extract_releases_model_info <- function(model_list) {
+  lapply(model_list, function(model) {
+    data.frame(
+      yname = model$DIDparams$yname,
+      att = model$overall.att,
+      ci_lower = model$overall.att - 1.96 * model$overall.se,
+      ci_upper = model$overall.att + 1.96 * model$overall.se
+    )
+  })
+}
+
+info_releases <- do.call(rbind, extract_releases_model_info(att_releases_time))
+info_releases$yname <- paste0(time, "_years")
+
+# Plot the ATTs with time as a grouping aesthetic
+
+# Updated ggplot code without 'coord_flip' and with axis labels corrected
+ggplot(info_releases, aes(x = yname, y = att)) +
+  geom_point()  +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Number of Releases",
+       x = "Time around treatment",
+       y = "Average Treatment Effect (ATT)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#......
+# fixest eventstudy plots
+#......
+
+#eventstudy with fixed effects on artist level
+eventstudy_fe_n_releases = feols(n_releases ~  i(release_year, is_US, ref = 2001) |label_id ,cluster=~label_id,
+                               labels_year_similarity_df)
+
+#plot
+iplot(eventstudy_fe_n_releases,
+      ref.line = c(2001),
+      ci.col='navy',
+      ci_level=0.95,
+      main="Event study of number of releases",
+      xlab="years since Billboard policy change",
+      ylab="")
+
+#treatment effects
+did_fe_n_releases <- feols(n_releases ~  post_treatment*is_US |label_id ,cluster=~label_id,
+                         labels_year_similarity_df)
+
+summary(did_fe_n_releases)
+
+####----------------- DiD analysis: US vs Europe similarity indiator analysis over 4 years ------ ####
 
 
 #if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
@@ -1093,6 +1214,24 @@ texreg(list(beta_regression_models[[1]],
 
 
 #### -------- ISTO regression tables: By DV rather than model --------------------------- #####
+
+#if (!require(modelsummary)) install.packages("modelsummary"); library(modelsummary) # mainly for the tabyl package
+
+library(modelsum)
+
+#......................
+# Coefficients of songs, artists and releases
+#......................
+
+texreg(list(did_fe_n_artist,
+            did_fe_n_songs,
+            did_fe_n_releases),
+       digits = 3,
+       #include the mean and median for the dependent variables
+       custom.model.names = c("Number of Artists", "Number of Songs", "Number of Releases"),
+       custom.coef.names = c("post treatment",
+                             "US based*post treatment (ATT)"))
+
 
 #......................
 # MAIN ANALYSIS Looped - by DV

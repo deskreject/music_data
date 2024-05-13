@@ -8,23 +8,23 @@
 #..............
 
 
-# if (!require(readr)) install.packages("readr"); library(readr) # reading csv files
-# if (!require(renv)) install.packages("renv"); library(renv) # environment creator package
-# if (!require(tidyverse)) install.packages("tidyverse"); library(tidyverse) # tidyverse
-# if (!require(here)) install.packages("here"); library(here) # relative file paths
-# if (!require(stringr)) install.packages("stringr"); library(stringr) # string package
-# if (!require(lubridate)) install.packages("lubridate"); library(lubridate) # package for dealing with date-type format
-# if (!require(psych)) install.packages("psych"); library(psych) # get the describe function
-# if (!require(gridExtra)) install.packages("gridExtra"); library(gridExtra) # get the describe function
-# if (!require(jsonlite)) install.packages("jsonlite"); library(jsonlite) # read json data
-# if (!require(janitor)) install.packages("janitor"); library(janitor) # mainly for the tabyl package
+#if (!require(readr)) install.packages("readr"); library(readr) # reading csv files
+#if (!require(renv)) install.packages("renv"); library(renv) # environment creator package
+#if (!require(tidyverse)) install.packages("tidyverse"); library(tidyverse) # tidyverse
+#if (!require(here)) install.packages("here"); library(here) # relative file paths
+#if (!require(stringr)) install.packages("stringr"); library(stringr) # string package
+#if (!require(lubridate)) install.packages("lubridate"); library(lubridate) # package for dealing with date-type format
+#if (!require(psych)) install.packages("psych"); library(psych) # get the describe function
+#if (!require(gridExtra)) install.packages("gridExtra"); library(gridExtra) # get the describe function
+#if (!require(jsonlite)) install.packages("jsonlite"); library(jsonlite) # read json data
+#if (!require(janitor)) install.packages("janitor"); library(janitor) # mainly for the tabyl package
 
 
 # initiate r environment - only once
 # renv::init()
 
 # if code runs, create a new snapshot
-# renv::snapshot()
+#renv::snapshot()
 
 #..........................................
 # loading base packages
@@ -91,6 +91,13 @@ df_musicbrainz_v5 <- fromJSON(here::here("data", "raw_data", "musicbrainz", "df_
 
 # read in the musicbrainz data which includes US as country, the date range of interest and the ISRCs for songs
 df_musicbrainz_v6_isrcs <- fromJSON(here::here("data", "raw_data", "musicbrainz","isrcs_from_release_with_label_v6.json"))
+
+#.........................
+# load sql mb tables - 03.2024
+#.........................
+
+# load table with the countries and release ids
+df_mb_countries_labels <- read.csv(here::here("data", "raw_data", "musicbrainz", "sql_exports", "release_country_labels_80_10.csv"))
 
 #.................................
 # mb label to releases information

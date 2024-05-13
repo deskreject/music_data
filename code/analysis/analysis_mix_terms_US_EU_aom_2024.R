@@ -555,6 +555,16 @@ ggplot(info_prop_unbalanced, aes(x = att, y = reorder(yname, att))) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(y = "Terms in songs divided by total songs", x = "Average Treatment Effect (ATT)")
 
+#.........
+# fixest estimation
+#.........
+
+#loop over the terms creating the different feols estimations
+
+#extract the coefficient and the SEs
+
+
+
 
 #### ------------ AOM 2024 TABLES: submission ------------------ ####
 
