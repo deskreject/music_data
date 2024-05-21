@@ -12,18 +12,12 @@
 
 
 
-####----------------------------- 1998 - 2005 Preparing Country labels df -----------------------------####
+####----------------------------- Preparing Country labels df -----------------------------####
 
-#filter the dataframe to only inclue the years 1998 - 2005
-df_mb_countries_labels_98_05 <- df_mb_countries_labels %>% 
-  filter(date_year >= 1998 & date_year <= 2005)
 
-#filter the dataframe to only include the name_countries: "United States", "United Kingdom", "Canada", "Germany", "France", "Italy", "Spain"
-df_mb_ct_lb_98_05_filtered <- df_mb_countries_labels_98_05 %>% 
-  filter(name_country %in% c("United States", "United Kingdom", "Canada", "Germany", "France", "Italy", "Spain"))
 
 #add in a column that is a concatentation of id_release, name_country and date_year called duplicate_check
-df_mb_ct_lb_98_05_filtered <- df_mb_ct_lb_98_05_filtered %>% 
+df_mb_countries_labels_filtered <- df_mb_countries_labels %>% 
   mutate(duplicate_check = paste(id_release, name_country, date_year))
 
 #........
@@ -43,21 +37,21 @@ priority_mapping <- c("Reissue Production" = 10,
                       "Manufacturer" = 7)
 
 # Add a priority column to the dataframe
-df_mb_ct_lb_98_05_filtered <- df_mb_ct_lb_98_05_filtered %>%
+df_mb_countries_labels_filtered <- df_mb_countries_labels_filtered %>%
   mutate(priority = priority_mapping[name_label_type])
 
 # Step 2: Sort the dataframe by duplicate_check and priority
-df_mb_ct_lb_98_05_filtered <- df_mb_ct_lb_98_05_filtered %>%
+df_mb_countries_labels_filtered <- df_mb_countries_labels_filtered %>%
   arrange(duplicate_check, priority)
 
 # Step 3: Remove duplicates, keeping the first row of each duplicate set
-df_mb_ct_lb_98_05_unique <- df_mb_ct_lb_98_05_filtered %>%
+df_mb_countries_labels_unique <- df_mb_countries_labels_filtered %>%
   group_by(duplicate_check) %>%
   slice_min(order_by = priority, with_ties = FALSE) %>%
   ungroup()
 
 # Optional: You might want to remove the priority column if it's no longer needed
-df_mb_ct_lb_98_05_unique <- df_mb_ct_lb_98_05_unique %>%
+df_mb_countries_labels_unique <- df_mb_countries_labels_unique %>%
   select(-priority)
 
 #...........
@@ -65,17 +59,17 @@ df_mb_ct_lb_98_05_unique <- df_mb_ct_lb_98_05_unique %>%
 #...........
 
 # remove rows with name_release_g_type == "broadcast" from the unique dataframe
-df_mb_ct_lb_98_05_unique <- df_mb_ct_lb_98_05_unique %>% 
+df_mb_countries_labels_unique <- df_mb_countries_labels_unique %>% 
   filter(name_release_g_type != "broadcast")
 
 # add in indicator variable is_US that = 1 if release_country = United states
-df_mb_ct_lb_98_05_unique <- df_mb_ct_lb_98_05_unique %>% 
+df_mb_countries_labels_unique <- df_mb_countries_labels_unique %>% 
   mutate(is_US = ifelse(release_country == "United States", 1, 0)) %>%
   mutate(is_NorthA = ifelse(release_country %in% c("Canada", "United States"), 1, 0)) %>% 
   mutate(is_Europe = ifelse(release_country %in% c("Germany", "France", "Italy", "Spain", "United Kingdom"), 1, 0))
 
 # rename columns to match conventions in prior scripts
-df_mb_ct_lb_98_05_unique <- df_mb_ct_lb_98_05_unique %>% 
+df_mb_countries_labels_unique <- df_mb_countries_labels_unique %>% 
   rename(label_name = name_label,
          label_type = name_label_type,
          release_country = name_country,
@@ -89,7 +83,7 @@ df_mb_ct_lb_98_05_unique <- df_mb_ct_lb_98_05_unique %>%
 #..................................................................
 
 #STEP 1: get names of the labels that operate in both regions
-international_labels_table <- df_mb_ct_lb_98_05_unique %>% 
+international_labels_table <- df_mb_countries_labels_unique %>% 
   group_by(label_name, is_US) %>% 
   dplyr::summarise(count = n()) %>% 
   group_by(label_name) %>% 
@@ -97,7 +91,7 @@ international_labels_table <- df_mb_ct_lb_98_05_unique %>%
   filter(count > 1)
 
 #STEP 2: filter the df_combined table by those label names and then create the new names
-int_labels_table_new_names <- df_mb_ct_lb_98_05_unique %>% 
+int_labels_table_new_names <- df_mb_countries_labels_unique %>% 
   filter(label_name %in% international_labels_table$label_name) %>% 
   rowwise() %>% 
   mutate(label_name_new = ifelse(is_US == 1,
@@ -109,26 +103,27 @@ int_labels_table_new_names <- df_mb_ct_lb_98_05_unique %>%
 
 #STEP3: left join to original table
 
-df_mb_ct_lb_98_05_unique <- left_join(df_mb_ct_lb_98_05_unique,
+df_mb_countries_labels_unique <- left_join(df_mb_countries_labels_unique,
                                          int_labels_table_new_names,
                                          by= c("label_name", "is_US"))
 
 #STEP4: ifelse NAs to label name
-df_mb_ct_lb_98_05_unique$label_name_new <- ifelse(is.na(df_mb_ct_lb_98_05_unique$label_name_new) == T,
-                                                  df_mb_ct_lb_98_05_unique$label_name,
-                                                  df_mb_ct_lb_98_05_unique$label_name_new)
+df_mb_countries_labels_unique$label_name_new <- ifelse(is.na(df_mb_countries_labels_unique$label_name_new) == T,
+                                                  df_mb_countries_labels_unique$label_name,
+                                                  df_mb_countries_labels_unique$label_name_new)
 
 #STEP 5: create an indicator variable that is 0 if a label only operates domestically and 1 if abroad
-df_mb_ct_lb_98_05_unique$is_international <- ifelse(df_mb_ct_lb_98_05_unique$label_name %in% international_labels_table$label_name,
+df_mb_countries_labels_unique$is_international <- ifelse(df_mb_countries_labels_unique$label_name %in% international_labels_table$label_name,
                                                        1,
                                                        0)
+
 
 #....................
 # label releases by label's primary market of operation
 #.....................
 
 # check the percentage of releases in US vs Europe for labels in international_labels_table
-int_label_release_distribution <- df_mb_ct_lb_98_05_unique %>% 
+int_label_release_distribution <- df_mb_countries_labels_unique %>% 
   filter(label_name %in% international_labels_table$label_name) %>% 
   group_by(label_name, is_US) %>% 
   dplyr::summarise(count = n()) %>%
@@ -150,7 +145,7 @@ close_call_label_names <- int_label_release_distribution %>%
 
 #STEP 2: filter the df_mb_ct_lb_98_05_unique dataframe to only include the label names in close_call_label_names
 
-close_call_label_names_new <- df_mb_ct_lb_98_05_unique %>% 
+close_call_label_names_new <- df_mb_countries_labels_unique %>% 
   filter(label_name %in% close_call_label_names$label_name) %>% 
   rowwise() %>% 
   mutate(label_name_close = ifelse(is_US == 1,
@@ -161,17 +156,17 @@ close_call_label_names_new <- df_mb_ct_lb_98_05_unique %>%
   distinct(label_name_close, .keep_all = T)
 
 #STEP 3: left join to the original df
-df_mb_ct_lb_98_05_unique <- left_join(df_mb_ct_lb_98_05_unique,
+df_mb_countries_labels_unique <- left_join(df_mb_countries_labels_unique,
                                          close_call_label_names_new,
                                          by= c("label_name", "is_US"))
 
 #STEP 4: ifelse NAs to label name
-df_mb_ct_lb_98_05_unique$label_name_close <- ifelse(is.na(df_mb_ct_lb_98_05_unique$label_name_close) == T,
-                                                  df_mb_ct_lb_98_05_unique$label_name,
-                                                  df_mb_ct_lb_98_05_unique$label_name_close)
+df_mb_countries_labels_unique$label_name_close <- ifelse(is.na(df_mb_countries_labels_unique$label_name_close) == T,
+                                                  df_mb_countries_labels_unique$label_name,
+                                                  df_mb_countries_labels_unique$label_name_close)
 
 #STEP 5: create a lookup table of the labels with label_name_close that have 50% or more US releases
-mainly_US_labels <- df_mb_ct_lb_98_05_unique %>% 
+mainly_US_labels <- df_mb_countries_labels_unique %>% 
   group_by(label_name_close, is_US) %>%
   dplyr::summarise(count = n()) %>%
   group_by(label_name_close) %>%
@@ -182,13 +177,34 @@ mainly_US_labels <- df_mb_ct_lb_98_05_unique %>%
 
 
 #STEP 6: then create a new column called _is_US_labels which is 1 if name is in mainly_US_labels
-df_mb_ct_lb_98_05_unique <- df_mb_ct_lb_98_05_unique %>% 
+df_mb_countries_labels_unique <- df_mb_countries_labels_unique %>% 
   mutate(is_US_labels = ifelse(label_name_close %in% mainly_US_labels$label_name_close,
                                1,
                                0))
 
 
+##### ------------------------------ Filtering down the label country df to countries and years -----------------------------####
 
+#filter the dataframe to only inclue the years 1998 - 2005 
+#filter the dataframe to only include the name_countries: "United States", "United Kingdom", "Canada", "Germany", "France", "Italy", "Spain"
+df_mb_ct_lb_98_05_unique <- df_mb_countries_labels_unique %>% 
+  filter(release_year >= 1998 & release_year <= 2005) %>% 
+  filter(release_country %in% c("United States", "United Kingdom", "Canada", "Germany", "France", "Italy", "Spain")) %>% 
+  filter(label_type != "broadcast")
+
+#filter the dataframe to only include years 1987 - 1994
+# filter the dataframe to only include the name_countries: "United States", "United Kingdom", "Canada", "Germany", "France", "Italy", "Spain"
+df_mb_ct_lb_87_94_unique <- df_mb_countries_labels_unique %>% 
+  filter(release_year >= 1987 & release_year <= 1994) %>% 
+  filter(release_country %in% c("United States", 
+                                #"United Kingdom", --> seems to have introduced the EPoS data at same time as US
+                                "Canada", 
+                                "Germany", 
+                                "France", 
+                                "Italy", 
+                                "Spain")) %>% 
+  filter(label_type != "broadcast")
+  
 
 #### ----------------------------- Preparing song level data -----------------------------####
 
@@ -229,23 +245,38 @@ df_mb_songs_filtered_unique <- df_mb_songs_all_filtered %>%
 
 #### -------------------- merging songs by release id to the country label dataframe --------------------- ####
 
+#create the list of the 2 dataframes from countries and labels
+list_df_ct_lb <- list(df_mb_ct_lb_98_05_unique, 
+                      df_mb_ct_lb_87_94_unique)
+
+# name the list elements "remix" and "soundscan"
+names(list_df_ct_lb) <- c("remix", "soundscan")
+
 #remove redundant columns from the df_mb_ct_lb_98_05_unique dataframe - label_type, mbid_release, id_artist_credit, duplicate_check, is_international
-df_mb_ct_lb_98_05_unique_merge <- df_mb_ct_lb_98_05_unique %>% 
+list_df_ct_lb <- lapply(list_df_ct_lb, function(x) {
+  x %>% 
   select(-c(label_type, mbid_release, id_artist_credit, duplicate_check
             #is_international
             ))
+})
 
 #left join the df_songs_filtered_unique to the df_mb_ct_lb_98_05_unique_merge dataframe based on id_release
-df_mb_ct_lb_songs_98_05_merged <- left_join(df_mb_ct_lb_98_05_unique_merge,
-                                            df_mb_songs_filtered_unique,
-                                            by = "id_release")
+list_df_ct_lb <- lapply(list_df_ct_lb, function(x) {
+  left_join(x,
+            df_mb_songs_filtered_unique,
+            by = "id_release")
+})
 
 #create a new duplicate check column that consists of id_recording, id_release, release_country
-df_mb_ct_lb_songs_98_05_merged <- df_mb_ct_lb_songs_98_05_merged %>% 
-  mutate(duplicate_check = paste(id_recording, id_release, release_country))
+#df_mb_ct_lb_songs_98_05_merged <- df_mb_ct_lb_songs_98_05_merged %>% 
+ # mutate(duplicate_check = paste(id_recording, id_release, release_country))
+#--> NO DUPLICATES FOUND
+
 
 #create a dataframe at the label_name_new and release_year level, counting number of songs, number of artists, and retaining the _is columns
-region_song_artists_releases_lab_new_98_05 <- df_mb_ct_lb_songs_98_05_merged %>%
+list_panel_ct_lb_songs_new <- lapply(list_df_ct_lb, function(x){
+
+x %>%
   filter(id_recording != "NA") %>% 
   group_by(label_name_new, release_year) %>% 
   summarise(n_songs = n_distinct(id_recording),
@@ -259,8 +290,16 @@ region_song_artists_releases_lab_new_98_05 <- df_mb_ct_lb_songs_98_05_merged %>%
             is_international = max(is_international)) %>% 
   arrange(label_name_new, release_year)
 
+})
+
+#rename the list items
+names(list_panel_ct_lb_songs_new) <- c("region_song_artists_releases_lab_new_98_05", 
+                                       "region_song_artists_releases_lab_new_87_94")
+
 #create the dataframe as above, using label_name_close as the grouping variable instead of label_name_new
-region_song_artists_releases_lab_close_98_05 <- df_mb_ct_lb_songs_98_05_merged %>%
+list_panel_ct_lb_songs_close <- lapply(list_df_ct_lb, function(x){
+
+x %>%
   filter(id_recording != "NA") %>% 
   group_by(label_name_close, release_year) %>% 
   summarise(n_songs = n_distinct(id_recording),
@@ -273,23 +312,38 @@ region_song_artists_releases_lab_close_98_05 <- df_mb_ct_lb_songs_98_05_merged %
             is_internation = max(is_international)) %>% 
   arrange(label_name_close, release_year)
 
+})
+
+#rename the list items
+names(list_panel_ct_lb_songs_close) <- c("region_song_artists_releases_lab_close_98_05", 
+                                         "region_song_artists_releases_lab_close_87_94")
+
 # the same without Canada
-region_song_artists_releases_98_05_no_canada <- df_mb_ct_lb_songs_98_05_merged %>%
-  filter(id_recording != "NA", release_country != "Canada") %>% 
-  group_by(label_name_new, release_year) %>% 
-  summarise(n_songs = n_distinct(id_recording),
-            n_artists = n_distinct(id_artist_credit),
-            n_releases = n_distinct(id_release),
-            is_US = max(is_US),
-            is_Europe = max(is_Europe)) %>% 
-  arrange(label_name_new, release_year)
+#region_song_artists_releases_98_05_no_canada <- df_mb_ct_lb_songs_98_05_merged %>%
+ # filter(id_recording != "NA", release_country != "Canada") %>% 
+  #group_by(label_name_new, release_year) %>% 
+  #summarise(n_songs = n_distinct(id_recording),
+   #         n_artists = n_distinct(id_artist_credit),
+    #        n_releases = n_distinct(id_release),
+     #       is_US = max(is_US),
+      #      is_Europe = max(is_Europe)) %>% 
+  # arrange(label_name_new, release_year)
+
+
 
 #save the dataframe to an rds file under "data", "interim_data", "region_song_artist_releases_98_05.rda"
-saveRDS(region_song_artists_releases_lab_new_98_05,
+saveRDS(list_panel_ct_lb_songs_new[[1]],
         here::here("data", "interim_data", "region_song_artists_releases_lab_new_98_05.rda"))
-# no Canada dataset
-saveRDS(region_song_artists_releases_lab_close_98_05, 
+# alternative region specification panel
+saveRDS(list_panel_ct_lb_songs_close[[1]], 
         here::here("data", "interim_data", "region_song_artists_releases_lab_close_98_05.rda"))
+
+#save the 87-94 data as .rda datasets
+saveRDS(list_panel_ct_lb_songs_new[[2]],
+        here::here("data", "interim_data", "region_song_artists_releases_lab_new_87_94.rda"))
+# alternative region specification panel
+saveRDS(list_panel_ct_lb_songs_close[[2]], 
+        here::here("data", "interim_data", "region_song_artists_releases_lab_close_87_94.rda"))
 
 #### -------------- Add in the artist names by artist_credit_id to the df_mb_countries_labels dataset ----------- #####
 

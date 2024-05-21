@@ -7,13 +7,21 @@
 #.............................
 
 #load the necessary dataframe
-#with Canada
-labels_year_similarity_df  <- readRDS(here::here("data", "interim_data", "region_song_artist_releases_98_05.rda")) %>% 
+#remix time period
+#regular label name configuration
+labels_year_similarity_df_remix_new  <- readRDS(here::here("data", "interim_data", "region_song_artists_releases_lab_new_98_05.rda")) %>% 
   ungroup()
 
-#without Canada
-labels_year_similarity_df  <- readRDS(here::here("data", "interim_data", "region_song_artist_releases_98_05_no_canada.rda")) %>%
+#new label name configuration
+labels_year_similarity_df_remix_close  <- readRDS(here::here("data", "interim_data", "region_song_artists_releases_lab_close_98_05.rda")) %>%
   ungroup()
+
+#soundscan intro
+#regular label name configuration
+labels_year_similarity_df_soundscan_new <- readRDS(here::here("data", "interim_data", "region_song_artists_releases_lab_new_87_94.rda"))
+
+#new label name configuration
+labels_year_similarity_df_soundscan_close <- readRDS(here::here("data", "interim_data", "region_song_artists_releases_lab_close_87_94.rda"))
 
 #transform DVs to numeric
 #cols_to_convert <- c("mean", "median", "sd", "cv")
@@ -25,27 +33,82 @@ labels_year_similarity_df  <- readRDS(here::here("data", "interim_data", "region
   #filter(release_year > 1997, release_year < 2006 ) %>% 
   #filter(n_songs > 2)
 
+#add all the panel dataframes to a list
+list_panel_data_new <- list(labels_year_similarity_df_remix_new,
+                            labels_year_similarity_df_soundscan_new)
+
+
+list_panel_data_close <- list(labels_year_similarity_df_remix_close,
+                              labels_year_similarity_df_soundscan_close)
+
+#........
+# for the label names where they are split by where they release songs
+#........
+
 #add in the period variable
-labels_year_similarity_df <- labels_year_similarity_df %>%
+list_panel_data_new <- lapply(list_panel_data_new, function(x){
+
+  x %>%
   group_by(release_year) %>%
   arrange(release_year) %>%
   dplyr::summarise(period = 0) %>%
   mutate(period = c(-3:4)) %>%
-  left_join(labels_year_similarity_df, ., by="release_year") %>% 
+  left_join(x, ., by="release_year") %>% 
   #remove NA labels otherwise they will be misclassified as NA_int and NA_ameria later on
-  filter(is.na(label_name_new) == F)
+  filter(is.na(label_name_new) == F) %>% 
+    ungroup()
+})
 
 #add in the indicator variable
-labels_year_similarity_df <- labels_year_similarity_df %>% 
+list_panel_data_new <- lapply(list_panel_data_new, function(x){
+
+  x %>% 
   group_by(label_name_new)%>%
   dplyr::summarise(label_id = 0) %>%
   mutate(label_id = row_number(.)) %>%
-  left_join(labels_year_similarity_df, ., by = "label_name_new")
-
+  left_join(x, ., by = "label_name_new") %>%
+    
 #add in a "post_treatment" binary variable
-labels_year_similarity_df$post_treatment <- if_else(labels_year_similarity_df$release_year > 2001,
-                                                    1,
-                                                    0)
+  mutate(post_treatment = if_else(release_year > 2001,
+                                  1,
+                                  0)) %>%
+  ungroup()
+})
+
+#............
+# for the label names where release location is based on majority of label releases
+#............
+
+#add in the period variable
+list_panel_data_close <- lapply(list_panel_data_close, function(x){
+  
+  x %>%
+    group_by(release_year) %>%
+    arrange(release_year) %>%
+    dplyr::summarise(period = 0) %>%
+    mutate(period = c(-3:4)) %>%
+    left_join(x, ., by="release_year") %>% 
+    #remove NA labels otherwise they will be misclassified as NA_int and NA_ameria later on
+    filter(is.na(label_name_close) == F) %>% 
+    ungroup()
+})
+
+#add in the indicator variable
+list_panel_data_close <- lapply(list_panel_data_close, function(x){
+  
+  x %>% 
+    group_by(label_name_close)%>%
+    dplyr::summarise(label_id = 0) %>%
+    mutate(label_id = row_number(.)) %>%
+    left_join(x, ., by = "label_name_close") %>%
+    
+    #add in a "post_treatment" binary variable
+    mutate(post_treatment = if_else(release_year > 2001,
+                                    1,
+                                    0)) %>%
+    ungroup()
+})
+
 
 #small adjustment to cv value that is above one
 #labels_year_similarity_df$cv  <- if_else(labels_year_similarity_df$cv > 1,
@@ -79,9 +142,11 @@ time <- seq(1,4)
 # loop estimation - balanced
 
 
-model_list_songs_time <- lapply(time, function(t){
+model_list_songs_time <- lapply(list_panel_data_new, function(df){
   
-  df_new <- labels_year_similarity_df %>% 
+ list_time <- lapply(time, function(t){
+  
+  df_new <- df %>% 
     filter(period <= t, period >= (t-1)*-1)
     
     att_gt(yname = "n_songs",
@@ -93,26 +158,34 @@ model_list_songs_time <- lapply(time, function(t){
            bstrap = T,
            cband = F,
            clustervars = "label_id")
-    
+  })
+ 
+ #give the list items name according to time t
+ names(list_time) <- paste0(time, "_years")
+ 
+ #return the list
+ return(list_time)
+ 
+})
 
-}
-)
-
-names(model_list_songs_time) <- paste0(time, "_years")
+names(model_list_songs_time) <- c("remix_policy",
+                                  "soundscan_policy")
 
 #eventstudy
 # create plots - no controls
 
-event_plot_songs <- ggdid(model_list_songs_time[[4]],
-        title = "Eventustdy number of songs",
+event_plot_songs <- ggdid(model_list_songs_time$soundscan_policy$`4_years`,
+        title = "Eventustdy number of songs 1998 to 2005",
         ylab = "change in number of songs compared to base period")
 
 
 event_plot_songs
 
 # summarise models 
-
-att_songs_time <- lapply(model_list_songs_time, function(model) {
+#.............
+#remix policy
+#............
+att_songs_time_remix_policy <- lapply(model_list_songs_time$remix_policy, function(model) {
     aggte(model, type = 'simple')
 })
 
@@ -128,18 +201,40 @@ extract_song_model_info <- function(model_list) {
   })
 }
 
-info_songs <- do.call(rbind, extract_song_model_info(att_songs_time))
-info_songs$yname <- paste0(time, "_years")
+info_songs_remix <- do.call(rbind, extract_song_model_info(att_songs_time_remix_policy))
+info_songs_remix$yname <- paste0(time, "_years")
 
 # Plot the ATTs with time as a grouping aesthetic
 
 # Updated ggplot code without 'coord_flip' and with axis labels corrected
-ggplot(info_songs, aes(x = yname, y = att)) +
+ggplot(info_songs_remix, aes(x = yname, y = att)) +
   geom_point()  +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
   geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
   theme_minimal() +
-  labs(x = "Time around treatment", y = "Average Treatment Effect (ATT)") +
+  labs(x = "Time around treatment", y = "Average Treatment Effect (ATT) - remix policy change") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#..................
+#sound scan policy
+#.................
+
+att_song_time_soundscan_policy <- lapply(model_list_songs_time$soundscan_policy, function(model) {
+  aggte(model, type = 'simple')
+})
+
+info_songs_soundscan <- do.call(rbind, extract_song_model_info(att_song_time_soundscan_policy))
+info_songs_soundscan$yname <- paste0(time, "_years")
+
+# Plot the ATTs with time as a grouping aesthetic
+
+# Updated ggplot code without 'coord_flip' and with axis labels corrected
+ggplot(info_songs_soundscan, aes(x = yname, y = att)) +
+  geom_point()  +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
+  theme_minimal() +
+  labs(x = "Time around treatment", y = "Average Treatment Effect (ATT) - soundscan policy change") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #......

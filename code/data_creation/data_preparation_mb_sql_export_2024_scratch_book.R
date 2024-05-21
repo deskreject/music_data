@@ -9,9 +9,10 @@
 #####----------------------------- Exploratory checks - Country labels df -----------------------------#####
 
 #create a table that contains the number of releases (id_release) by name_country
-count_release_country <- df_mb_countries_labels %>% 
+count_release_country <- df_mb_countries_labels_unique %>% 
   group_by(name_country) %>% 
   summarise(n = n()) %>% 
+  mutate(perc_total = round(n/sum(n) * 100, 1)) %>%
   arrange(desc(n))
 
 #same table, just with the years 1998 - 2005
