@@ -75,6 +75,10 @@ list_panel_data_new <- lapply(list_panel_data_new, function(x){
   ungroup()
 })
 
+# change the names of the variables in the list to match eachother
+names(list_panel_data_close[[1]]) <- names(list_panel_data_new[[1]])
+names(list_panel_data_close[[2]]) <- names(list_panel_data_new[[2]])
+
 #............
 # for the label names where release location is based on majority of label releases
 #............
@@ -115,7 +119,7 @@ list_panel_data_close <- lapply(list_panel_data_close, function(x){
  #                                        0.9999,
   #                                       labels_year_similarity_df$cv)
 
-####------------------- Number of songs: US vs Europe ----------------- #####
+####------------------- Number of songs: US vs Europe - Soundscan and Remix policy ----------------- #####
 
 # if (!require(fixest)) install.packages("fixest"); library(fixest) #for the point estimate and error bar plots for pretrends
 # if (!require(lfe)) install.packages("lfe"); library(lfe) #for linear models with multiway clustering and fixed effects
@@ -142,7 +146,7 @@ time <- seq(1,4)
 # loop estimation - balanced
 
 
-model_list_songs_time <- lapply(list_panel_data_new, function(df){
+model_list_songs_time <- lapply(list_panel_data_close, function(df){
   
  list_time <- lapply(time, function(t){
   
@@ -152,7 +156,7 @@ model_list_songs_time <- lapply(list_panel_data_new, function(df){
     att_gt(yname = "n_songs",
            tname = "period",
            idname = "label_id",
-           gname = "is_US",
+           gname = "is_US_labels",
            data = df_new,
            allow_unbalanced_panel = TRUE,
            bstrap = T,
@@ -174,7 +178,7 @@ names(model_list_songs_time) <- c("remix_policy",
 #eventstudy
 # create plots - no controls
 
-event_plot_songs <- ggdid(model_list_songs_time$soundscan_policy$`4_years`,
+event_plot_songs <- ggdid(model_list_songs_time$remix_policy$`4_years`,
         title = "Eventustdy number of songs 1998 to 2005",
         ylab = "change in number of songs compared to base period")
 
@@ -319,9 +323,12 @@ time <- seq(1,4)
 # loop estimation - balanced
 
 
-model_list_artists_time <- lapply(time, function(t){
+
+model_list_artists_time <- lapply(list_panel_data_close, function(df){
   
-  df_new <- labels_year_similarity_df %>% 
+  list_time <- lapply(time, function(t){
+  
+  df_new <- df %>% 
     filter(period <= t, period >= (t-1)*-1)
   
   models <- att_gt(yname = "n_artists",
@@ -337,15 +344,23 @@ model_list_artists_time <- lapply(time, function(t){
   print(t)
   
   return(models)
-}
-)
+  })
+  
+  #give the list items name according to time t
+  names(list_time) <- paste0(time, "_years")
+  
+  #return the list
+  return(list_time)
+  
+})
 
-names(model_list_artists_time) <- paste0(time, "_years")
+names(model_list_artists_time) <- c("remix_policy",
+                                    "soundscan_policy")
 
 #eventstudy
 # create plots - no controls
 
-event_plot_artists <- ggdid(model_list_artists_time[[4]],
+event_plot_artists <- ggdid(model_list_artists_time$remix_policy$`4_years`,
                           title = "Eventustdy number of artists",
                           ylab = "change in number of artists compared to base period")
 
@@ -353,8 +368,11 @@ event_plot_artists <- ggdid(model_list_artists_time[[4]],
 event_plot_artists
 
 # summarise models 
+#..................
+#remixing policy
+#.................
 
-att_artists_time <- lapply(model_list_artists_time, function(model) {
+att_artists_time <- lapply(model_list_artists_time$remix_policy, function(model) {
   aggte(model, type = 'simple')
 })
 
@@ -381,7 +399,33 @@ ggplot(info_artists, aes(x = yname, y = att)) +
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
   geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
   theme_minimal() +
-  labs(title = "Number of Artists",
+  labs(title = "Number of Artists - remix policy change",
+       x = "Time around treatment",
+       y = "Average Treatment Effect (ATT)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#..................
+#sound scan policy
+#.................
+
+att_artists_time <- lapply(model_list_artists_time$soundscan_policy, function(model) {
+  aggte(model, type = 'simple')
+})
+
+
+
+info_artists <- do.call(rbind, extract_artists_model_info(att_artists_time))
+info_artists$yname <- paste0(time, "_years")
+
+# Plot the ATTs with time as a grouping aesthetic
+
+# Updated ggplot code without 'coord_flip' and with axis labels corrected
+ggplot(info_artists, aes(x = yname, y = att)) +
+  geom_point()  +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  geom_hline(yintercept = 0.00, color = "red", linewidth = 0.5, linetype = "solid") +
+  theme_minimal() +
+  labs(title = "Number of Artists - soundscan policy change",
        x = "Time around treatment",
        y = "Average Treatment Effect (ATT)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
