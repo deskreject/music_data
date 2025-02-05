@@ -47,3 +47,4 @@ data/raw_data/
 
 #the spotify credentials
 code/data_creation/spotify_credentials.json
+code/data_creation/chartmetric_refresh_token.txt
