@@ -1,0 +1,120 @@
+2025-02-13 20:41:42,088 ERROR: Network error on attempt 1 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:41:43,089 ERROR: Network error on attempt 2 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:41:45,090 ERROR: Network error on attempt 3 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:41:49,091 ERROR: Network error on attempt 4 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:41:57,092 ERROR: Network error on attempt 5 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:13,096 ERROR: Failed to get Chartmetric ID for ISRC USCA29900849: Max retries exceeded for endpoint /api/track/isrc/USCA29900849/get-ids
+2025-02-13 20:42:13,096 INFO: Processed ISRC USCA29900849: Chartmetric ID = None
+2025-02-13 20:42:13,197 ERROR: Network error on attempt 1 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:14,197 ERROR: Network error on attempt 2 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:16,198 ERROR: Network error on attempt 3 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:20,199 ERROR: Network error on attempt 4 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:28,200 ERROR: Network error on attempt 5 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:44,201 ERROR: Failed to get Chartmetric ID for ISRC NLA329980201: Max retries exceeded for endpoint /api/track/isrc/NLA329980201/get-ids
+2025-02-13 20:42:44,201 INFO: Processed ISRC NLA329980201: Chartmetric ID = None
+2025-02-13 20:42:44,302 ERROR: Network error on attempt 1 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:45,303 ERROR: Network error on attempt 2 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:47,303 ERROR: Network error on attempt 3 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:51,304 ERROR: Network error on attempt 4 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:42:59,305 ERROR: Network error on attempt 5 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:15,306 ERROR: Failed to get Chartmetric ID for ISRC USWB19701765: Max retries exceeded for endpoint /api/track/isrc/USWB19701765/get-ids
+2025-02-13 20:43:15,306 INFO: Processed ISRC USWB19701765: Chartmetric ID = None
+2025-02-13 20:43:15,407 ERROR: Network error on attempt 1 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:16,408 ERROR: Network error on attempt 2 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:18,409 ERROR: Network error on attempt 3 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:22,410 ERROR: Network error on attempt 4 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:30,411 ERROR: Network error on attempt 5 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:46,411 ERROR: Failed to get Chartmetric ID for ISRC USA2B0211419: Max retries exceeded for endpoint /api/track/isrc/USA2B0211419/get-ids
+2025-02-13 20:43:46,411 INFO: Processed ISRC USA2B0211419: Chartmetric ID = None
+2025-02-13 20:43:46,512 ERROR: Network error on attempt 1 for /api/track/isrc/USRO20352402/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:47,513 ERROR: Network error on attempt 2 for /api/track/isrc/USRO20352402/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:49,514 ERROR: Network error on attempt 3 for /api/track/isrc/USRO20352402/get-ids: name 'HOST' is not defined
+2025-02-13 20:43:53,515 ERROR: Network error on attempt 4 for /api/track/isrc/USRO20352402/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:01,516 ERROR: Network error on attempt 5 for /api/track/isrc/USRO20352402/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:17,517 ERROR: Failed to get Chartmetric ID for ISRC USRO20352402: Max retries exceeded for endpoint /api/track/isrc/USRO20352402/get-ids
+2025-02-13 20:44:17,518 INFO: Processed ISRC USRO20352402: Chartmetric ID = None
+2025-02-13 20:44:17,619 ERROR: Network error on attempt 1 for /api/track/isrc/USRC15801345/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:18,619 ERROR: Network error on attempt 2 for /api/track/isrc/USRC15801345/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:20,620 ERROR: Network error on attempt 3 for /api/track/isrc/USRC15801345/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:24,621 ERROR: Network error on attempt 4 for /api/track/isrc/USRC15801345/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:32,622 ERROR: Network error on attempt 5 for /api/track/isrc/USRC15801345/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:48,623 ERROR: Failed to get Chartmetric ID for ISRC USRC15801345: Max retries exceeded for endpoint /api/track/isrc/USRC15801345/get-ids
+2025-02-13 20:44:48,623 INFO: Processed ISRC USRC15801345: Chartmetric ID = None
+2025-02-13 20:44:48,724 ERROR: Network error on attempt 1 for /api/track/isrc/USBL10000087/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:49,725 ERROR: Network error on attempt 2 for /api/track/isrc/USBL10000087/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:51,726 ERROR: Network error on attempt 3 for /api/track/isrc/USBL10000087/get-ids: name 'HOST' is not defined
+2025-02-13 20:44:55,727 ERROR: Network error on attempt 4 for /api/track/isrc/USBL10000087/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:03,728 ERROR: Network error on attempt 5 for /api/track/isrc/USBL10000087/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:19,729 ERROR: Failed to get Chartmetric ID for ISRC USBL10000087: Max retries exceeded for endpoint /api/track/isrc/USBL10000087/get-ids
+2025-02-13 20:45:19,729 INFO: Processed ISRC USBL10000087: Chartmetric ID = None
+2025-02-13 20:45:19,831 ERROR: Network error on attempt 1 for /api/track/isrc/US3R40500030/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:20,833 ERROR: Network error on attempt 2 for /api/track/isrc/US3R40500030/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:22,834 ERROR: Network error on attempt 3 for /api/track/isrc/US3R40500030/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:26,834 ERROR: Network error on attempt 4 for /api/track/isrc/US3R40500030/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:34,835 ERROR: Network error on attempt 5 for /api/track/isrc/US3R40500030/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:50,836 ERROR: Failed to get Chartmetric ID for ISRC US3R40500030: Max retries exceeded for endpoint /api/track/isrc/US3R40500030/get-ids
+2025-02-13 20:45:50,836 INFO: Processed ISRC US3R40500030: Chartmetric ID = None
+2025-02-13 20:45:50,937 ERROR: Network error on attempt 1 for /api/track/isrc/JPKI00309478/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:51,938 ERROR: Network error on attempt 2 for /api/track/isrc/JPKI00309478/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:53,939 ERROR: Network error on attempt 3 for /api/track/isrc/JPKI00309478/get-ids: name 'HOST' is not defined
+2025-02-13 20:45:57,940 ERROR: Network error on attempt 4 for /api/track/isrc/JPKI00309478/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:05,941 ERROR: Network error on attempt 5 for /api/track/isrc/JPKI00309478/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:21,942 ERROR: Failed to get Chartmetric ID for ISRC JPKI00309478: Max retries exceeded for endpoint /api/track/isrc/JPKI00309478/get-ids
+2025-02-13 20:46:21,942 INFO: Processed ISRC JPKI00309478: Chartmetric ID = None
+2025-02-13 20:46:22,043 ERROR: Network error on attempt 1 for /api/track/isrc/GBCEL0300064/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:23,045 ERROR: Network error on attempt 2 for /api/track/isrc/GBCEL0300064/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:25,045 ERROR: Network error on attempt 3 for /api/track/isrc/GBCEL0300064/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:29,047 ERROR: Network error on attempt 4 for /api/track/isrc/GBCEL0300064/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:37,047 ERROR: Network error on attempt 5 for /api/track/isrc/GBCEL0300064/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:53,049 ERROR: Failed to get Chartmetric ID for ISRC GBCEL0300064: Max retries exceeded for endpoint /api/track/isrc/GBCEL0300064/get-ids
+2025-02-13 20:46:53,049 INFO: Processed ISRC GBCEL0300064: Chartmetric ID = None
+2025-02-13 20:46:53,150 ERROR: Network error on attempt 1 for /api/track/isrc/USA4D0010054/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:54,151 ERROR: Network error on attempt 2 for /api/track/isrc/USA4D0010054/get-ids: name 'HOST' is not defined
+2025-02-13 20:46:56,152 ERROR: Network error on attempt 3 for /api/track/isrc/USA4D0010054/get-ids: name 'HOST' is not defined
+2025-02-13 20:47:00,152 ERROR: Network error on attempt 4 for /api/track/isrc/USA4D0010054/get-ids: name 'HOST' is not defined
+2025-02-13 20:47:08,153 ERROR: Network error on attempt 5 for /api/track/isrc/USA4D0010054/get-ids: name 'HOST' is not defined
+2025-02-13 20:47:24,155 ERROR: Failed to get Chartmetric ID for ISRC USA4D0010054: Max retries exceeded for endpoint /api/track/isrc/USA4D0010054/get-ids
+2025-02-13 20:47:24,155 INFO: Processed ISRC USA4D0010054: Chartmetric ID = None
+2025-02-13 20:47:24,256 ERROR: Network error on attempt 1 for /api/track/isrc/USWB10302433/get-ids: name 'HOST' is not defined
+2025-02-13 20:47:25,257 ERROR: Network error on attempt 2 for /api/track/isrc/USWB10302433/get-ids: name 'HOST' is not defined
+2025-02-13 20:47:27,258 ERROR: Network error on attempt 3 for /api/track/isrc/USWB10302433/get-ids: name 'HOST' is not defined
+2025-02-13 20:47:31,260 ERROR: Network error on attempt 4 for /api/track/isrc/USWB10302433/get-ids: name 'HOST' is not defined
+2025-02-13 20:47:39,260 ERROR: Network error on attempt 5 for /api/track/isrc/USWB10302433/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:04,660 ERROR: Network error on attempt 1 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:05,662 ERROR: Network error on attempt 2 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:07,663 ERROR: Network error on attempt 3 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:11,663 ERROR: Network error on attempt 4 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:19,664 ERROR: Network error on attempt 5 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:35,665 ERROR: Failed to get Chartmetric ID for ISRC USCA29900849: Max retries exceeded for endpoint /api/track/isrc/USCA29900849/get-ids
+2025-02-13 20:49:35,665 INFO: Processed row 0, ISRC USCA29900849: Chartmetric ID = None
+2025-02-13 20:49:35,767 ERROR: Network error on attempt 1 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:36,768 ERROR: Network error on attempt 2 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:38,769 ERROR: Network error on attempt 3 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:42,769 ERROR: Network error on attempt 4 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:49:50,770 ERROR: Network error on attempt 5 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:06,771 ERROR: Failed to get Chartmetric ID for ISRC NLA329980201: Max retries exceeded for endpoint /api/track/isrc/NLA329980201/get-ids
+2025-02-13 20:50:06,772 INFO: Processed row 2, ISRC NLA329980201: Chartmetric ID = None
+2025-02-13 20:50:06,873 ERROR: Network error on attempt 1 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:07,874 ERROR: Network error on attempt 2 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:09,876 ERROR: Network error on attempt 3 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:13,876 ERROR: Network error on attempt 4 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:21,877 ERROR: Network error on attempt 5 for /api/track/isrc/USWB19701765/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:37,878 ERROR: Failed to get Chartmetric ID for ISRC USWB19701765: Max retries exceeded for endpoint /api/track/isrc/USWB19701765/get-ids
+2025-02-13 20:50:37,878 INFO: Processed row 5, ISRC USWB19701765: Chartmetric ID = None
+2025-02-13 20:50:37,980 ERROR: Network error on attempt 1 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:38,980 ERROR: Network error on attempt 2 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:40,981 ERROR: Network error on attempt 3 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:44,981 ERROR: Network error on attempt 4 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:50:52,982 ERROR: Network error on attempt 5 for /api/track/isrc/USA2B0211419/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:15,031 ERROR: Network error on attempt 1 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:16,032 ERROR: Network error on attempt 2 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:18,033 ERROR: Network error on attempt 3 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:22,034 ERROR: Network error on attempt 4 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:30,035 ERROR: Network error on attempt 5 for /api/track/isrc/USCA29900849/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:46,036 ERROR: Failed to get Chartmetric ID for ISRC USCA29900849: Max retries exceeded for endpoint /api/track/isrc/USCA29900849/get-ids
+2025-02-13 20:52:46,036 INFO: Processed row 0, ISRC USCA29900849: Chartmetric ID = None
+2025-02-13 20:52:46,036 ERROR: Network error on attempt 1 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:47,039 ERROR: Network error on attempt 2 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:49,041 ERROR: Network error on attempt 3 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:52:53,042 ERROR: Network error on attempt 4 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
+2025-02-13 20:53:01,043 ERROR: Network error on attempt 5 for /api/track/isrc/NLA329980201/get-ids: name 'HOST' is not defined
