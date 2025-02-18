@@ -16,6 +16,16 @@ _2024_scratch_book: code for sanity checks from the panel creation - exploratory
 - Scripts that were created to look into all the MB exports from Alessio over time
 - _v6 is one which includes ISRCs based on ALessios attempt to get US based releases during time from 1998-2005 
 
+# chartmetric_api
+_access_spotify_id_vm: using songs for which we have spotify characteristics, take their isrc code to request the chartmetric id - WU VM version
+_access_spotify_id: same as above, only locally tested and developed. Different file paths
+_access_trial: testing whether possible to get chartmetric ID from song names
+_song_metadata_spotify_comp: using the chartmetric IDs gathered from isrcs to collect song metadata
+
+## additional
+
+chartmetric_api.log: log file for the chartmetric api gathering script
+
 # data_preparation_sql_labels_v6:
 - a script related to exporting the release_IDs from the label export by Alessio (including more than US countries), and getting label information relate dto the release IDs
 
