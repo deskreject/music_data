@@ -16,7 +16,10 @@ _2024_scratch_book: code for sanity checks from the panel creation - exploratory
 - Scripts that were created to look into all the MB exports from Alessio over time
 - _v6 is one which includes ISRCs based on ALessios attempt to get US based releases during time from 1998-2005 
 
+- musicbrainz_related/25_02_musicbrainz_song_cleaning: A script meant to break down the 11 million songs to unique, recording ID based observation devoid of songs taht don't have true record label and are not really musical pieces
+
 # chartmetric_api
+_song_metadata_spotify_comp: the code used to get the song metadata using the chartmetric ID including a extraction script to get certain variables from the json into a tabular form. 
 _access_spotify_id_vm: using songs for which we have spotify characteristics, take their isrc code to request the chartmetric id - WU VM version
 _access_spotify_id: same as above, only locally tested and developed. Different file paths
 _access_trial: testing whether possible to get chartmetric ID from song names
