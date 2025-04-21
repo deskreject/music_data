@@ -37,6 +37,9 @@ chartmetric_api.log: log file for the chartmetric api gathering script
 - my attempts at getting a spotify API access script. Issue stopped at was that I get a hard request limit at 5000 requests
 - Alessio managed to batch his requests in his script, which I haven't implemented in mine 
 
+# 2504_spotify_sample_ivan_acoustic_chars
+- Code to generate a sample of spotify ids to test whether the soundstats guy actually can deliver the audio characteristics we need for our analysis. 
+
 
 # path_speficiation.py:
 - a helper script for my spotify access. Doesn't work well, might delete
