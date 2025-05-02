@@ -1,0 +1,192 @@
+2025-05-02 13:51:45,902 [INFO] ==================== Scraping Script Started ====================
+2025-05-02 13:51:45,910 [INFO] Checked existing CSV: Found 0 week/chart combinations already scraped.
+2025-05-02 13:51:45,911 [INFO] Starting SINGLES chart scrape (1044 weeks total: 1979-12-30 to 1999-12-26)
+2025-05-02 13:51:45,913 [INFO] Need to process 1044 weeks for SINGLES.
+2025-05-02 16:07:01,105 [INFO] ==================== Scraping Script Started ====================
+2025-05-02 16:07:01,107 [INFO] Existing CSV contains 0 week/chart combos.
+2025-05-02 16:07:01,109 [INFO] SINGLES  |  1979-12-30 → 1999-12-26  (1044 weeks still to fetch)
+2025-05-02 17:22:36,788 [INFO] Finished SINGLES | new rows this run: 1,044
+2025-05-02 17:22:36,790 [INFO] ALBUMS  |  1979-12-30 → 1999-12-26  (1044 weeks still to fetch)
+2025-05-02 17:25:18,534 [ERROR] Failed to fetch or parse https://www.officialcharts.com/charts/albums-chart/19800323/7502/ - skipping week
+Traceback (most recent call last):
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\util\connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\socket.py", line 976, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 488, in _make_request
+    raise new_e
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 464, in _make_request
+    self._validate_conn(conn)
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 1093, in _validate_conn
+    conn.connect()
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connection.py", line 704, in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connection.py", line 205, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: <urllib3.connection.HTTPSConnection object at 0x000002544D1FF290>: Failed to resolve 'www.officialcharts.com' ([Errno 11001] getaddrinfo failed)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\util\retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='www.officialcharts.com', port=443): Max retries exceeded with url: /charts/albums-chart/19800323/7502/ (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002544D1FF290>: Failed to resolve 'www.officialcharts.com' ([Errno 11001] getaddrinfo failed)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\astaub1\AppData\Local\Temp\ipykernel_41960\3854296057.py", line 83, in scrape_chart_for_week
+    html = fetch(url)
+           ^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 336, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 475, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 376, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 418, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 185, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 478, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\astaub1\AppData\Local\Temp\ipykernel_41960\136508595.py", line 15, in fetch
+    resp = session.get(url, timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\sessions.py", line 602, in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.officialcharts.com', port=443): Max retries exceeded with url: /charts/albums-chart/19800323/7502/ (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002544D1FF290>: Failed to resolve 'www.officialcharts.com' ([Errno 11001] getaddrinfo failed)"))
+2025-05-02 17:26:26,207 [ERROR] Failed to fetch or parse https://www.officialcharts.com/charts/albums-chart/19800330/7502/ - skipping week
+Traceback (most recent call last):
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\util\connection.py", line 60, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\socket.py", line 976, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 11001] getaddrinfo failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 488, in _make_request
+    raise new_e
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 464, in _make_request
+    self._validate_conn(conn)
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 1093, in _validate_conn
+    conn.connect()
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connection.py", line 704, in connect
+    self.sock = sock = self._new_conn()
+                       ^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connection.py", line 205, in _new_conn
+    raise NameResolutionError(self.host, self, e) from e
+urllib3.exceptions.NameResolutionError: <urllib3.connection.HTTPSConnection object at 0x000002544D1FD2E0>: Failed to resolve 'www.officialcharts.com' ([Errno 11001] getaddrinfo failed)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\urllib3\util\retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='www.officialcharts.com', port=443): Max retries exceeded with url: /charts/albums-chart/19800330/7502/ (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002544D1FD2E0>: Failed to resolve 'www.officialcharts.com' ([Errno 11001] getaddrinfo failed)"))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\astaub1\AppData\Local\Temp\ipykernel_41960\3854296057.py", line 83, in scrape_chart_for_week
+    html = fetch(url)
+           ^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 336, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 475, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 376, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 418, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 185, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\tenacity\__init__.py", line 478, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\astaub1\AppData\Local\Temp\ipykernel_41960\136508595.py", line 15, in fetch
+    resp = session.get(url, timeout=30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\sessions.py", line 602, in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric\Lib\site-packages\requests\adapters.py", line 700, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.officialcharts.com', port=443): Max retries exceeded with url: /charts/albums-chart/19800330/7502/ (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002544D1FD2E0>: Failed to resolve 'www.officialcharts.com' ([Errno 11001] getaddrinfo failed)"))
+2025-05-02 19:21:47,670 [INFO] Finished ALBUMS | new rows this run: 1,042
+2025-05-02 19:21:47,671 [INFO] Done. Dataset saved → c:\Users\astaub1\R_work\Research\music_data\data\raw_data\country_chart_data\uk_charts_1980_2000.csv
+2025-05-02 19:21:47,671 [INFO] ==================== Scraping Script Finished ====================

@@ -1,0 +1,293 @@
+# %%
+'''
+author: Alexander Staub
+Date: 2025-04-21
+Description: Script for scraper of "officialcharts.com", UK charts 
+
+'''
+
+# %%
+"""
+Scrape Official Charts (UK) – Singles & Albums, 1980-2000
+========================================================
+Outputs a single CSV with the columns
+
+    chart_type        "singles" | "albums"
+    chart_week_start  YYYY-MM-DD (Sunday shown in the URL)
+    position          1-100 (or 1-50 if the page shows only 50)*
+    last_week         integer or NaN
+    weeks_on_chart    integer
+    song_title
+    artist_name
+    song_url          URL of the title link (for later label lookup)
+
+The script is **checkpoint-aware**: if you stop it midway you can rerun it
+and it will skip the weeks already in the CSV.
+
+Requirement summary
+-------------------
+1) Two separate scrapes handled by the same script (`chart_type` param)  
+2) Every available position each week (page displays up to 100)  
+3) `song_url` retained instead of fetching the label now  
+4) Produces **one big CSV** in `data/` (relative path)  
+5) Works locally & remotely – all paths are relative  
+6) Robust to interruptions, rate-limits, and missing weeks  
+7) Random 0.5-2 s delay between *HTTP* requests
+
+© 2025 – academic-use only.  ↝ MIT licence if you wish.
+"""
+
+# %%
+# installing required packages
+from __future__ import annotations
+
+import csv
+import random
+import time
+import re # for regex
+from datetime import date, timedelta
+from pathlib import Path
+from typing import Iterable, List, Optional
+import logging
+
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+# %%
+# ──────────────────────────────────────────────────────────────
+# CONSTANTS & CONFIG
+# ──────────────────────────────────────────────────────────────
+BASE_URL = "https://www.officialcharts.com/charts"
+CHART_IDS = {
+    "singles": 7501,  # /singles-chart/{date}/7501/
+    "albums": 7502,   # /albums-chart/{date}/7502/
+}
+
+# Go three levels up from the current working directory
+base_dir = Path.cwd().parents[2]
+CSV_PATH = base_dir / "data" / "raw_data" / "country_chart_data" / "uk_charts_1980_2000.csv"
+CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
+HEADERS = {
+    "User-Agent": "chart-research/1.0 (+https://github.com/deskreject)",
+    "Accept-Language": "en-GB,en;q=0.9",
+}
+
+START_DATE = date(1979, 12, 30)   # charts including first Sunday in 1980
+END_DATE   = date(1999, 12, 26) # charts including last Sunday in 1999
+
+REQUEST_DELAY_RANGE = (1, 3.0)  # polite crawling
+
+# --- Add Logging Configuration ---
+LOG_FILE_PATH = base_dir / "code" / "logs" / "uk_charts_scraping.log" # Define log file path
+LOG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True) # Create logs directory
+
+logging.basicConfig(
+    level=logging.INFO, # Log INFO, WARNING, ERROR, CRITICAL levels
+    format="%(asctime)s [%(levelname)s] %(message)s", # Include timestamp and level
+    handlers=[
+        logging.FileHandler(LOG_FILE_PATH, mode='a'), # Append logs to this file
+        logging.StreamHandler() # Also print logs to the console
+    ]
+)
+
+# %%
+# ──────────────────────────────────────────────────────────────
+# HTTP helpers
+# ──────────────────────────────────────────────────────────────
+session = requests.Session()
+session.headers.update(HEADERS)
+
+
+@retry(
+    reraise=True,
+    stop=stop_after_attempt(5),
+    wait=wait_random_exponential(multiplier=1, max=20),
+)
+def fetch(url: str) -> str:
+    """GET a URL with retries & exponential back‑off (tenacity)."""
+    resp = session.get(url, timeout=30)
+    resp.raise_for_status()
+    return resp.text
+
+# %%
+# ──────────────────────────────────────────────────────────────
+# Core scraping logic
+# ──────────────────────────────────────────────────────────────
+def weekly_dates(start: date, end: date) -> Iterable[date]:
+    """Yield Sunday dates inclusive."""
+    d = start
+    one_week = timedelta(days=7)
+    while d <= end:
+        yield d
+        d += one_week
+
+
+def _int_from_text(text: str) -> Optional[int]:
+    """Return the first int found in *text* or None."""
+    m = re.search(r"(\d+)", text)
+    return int(m.group(1)) if m else None
+
+
+def parse_chart(html: str) -> List[dict]:
+    """Extract rows from a weekly chart page (robust across 1979‑1999)."""
+    soup = BeautifulSoup(html, "lxml")
+    rows: List[dict] = []
+
+    for item in soup.select(".chart-item"):
+        if "chart-ad" in item.get("class", []):  # skip adverts
+            continue
+
+        rank_tag   = item.select_one(".chart-key strong")
+        title_tag  = item.select_one("a.chart-name")
+        artist_tag = item.select_one("a.chart-artist")
+        if not all((rank_tag, title_tag, artist_tag)):
+            continue  # malformed card
+
+        # ── core fields ────────────────────────────────────────
+        position     = int(rank_tag.text.strip())
+        song_title   = title_tag.get_text(strip=True)
+        artist_name  = artist_tag.get_text(strip=True)
+        song_url     = title_tag.get("href")
+
+        # ── last‑week & weeks‑on chart (new vs legacy layouts) ─
+        last_week: Optional[int] = None
+        weeks_on:  Optional[int] = None
+
+        # modern layout (1990s‑present) — inside <div class="stats">
+        lw_span    = item.select_one(".stats .movement span span")
+        weeks_span = (
+            item.select_one(".stats .weeks span span") or
+            item.select_one(".stats .weeks span")
+        )
+        if lw_span and lw_span.text.strip().isdigit():
+            last_week = int(lw_span.text.strip())
+        if weeks_span and weeks_span.text.strip().isdigit():
+            weeks_on = int(weeks_span.text.strip())
+
+        # legacy fallback (older cached pages) — single <div class="meta">
+        if last_week is None or weeks_on is None:
+            meta = item.select_one(".meta")
+            if meta:
+                meta_txt = meta.get_text(" ", strip=True)
+                if last_week is None:
+                    last_week = _int_from_text(meta_txt.split("LW")[-1])
+                if weeks_on is None:
+                    weeks_on = _int_from_text(meta_txt.split("Weeks")[-1])
+
+        rows.append(
+            {
+                "position": position,
+                "song_title": song_title,
+                "artist_name": artist_name,
+                "last_week": last_week,
+                "weeks_on_chart": weeks_on,
+                "song_url": song_url,
+            }
+        )
+    return rows
+
+
+def scrape_chart_for_week(chart_type: str, week: date) -> pd.DataFrame | None:
+    chart_id = CHART_IDS[chart_type]
+    url = f"{BASE_URL}/{chart_type}-chart/{week:%Y%m%d}/{chart_id}/"
+    try:
+        logging.debug(f"Requesting URL: {url}") # Optional: Log URL being fetched at DEBUG level
+        html = fetch(url)
+    except requests.HTTPError as exc:
+        # print(f"[WARN] HTTP {exc.response.status_code} for {url} – skipping")
+        logging.warning(f"HTTP {exc.response.status_code} for {url} – skipping week")
+        return None
+    except Exception as exc:
+        # print(f"[ERROR] {exc} – skipping {url}")
+        logging.error(f"Failed to fetch or parse {url} - skipping week", exc_info=True)
+        return None
+
+    rows = parse_chart(html)
+    if not rows:
+        # print(f"[WARN] No rows extracted from {url}")
+        logging.warning(f"No chart rows extracted from {url} - skipping week")
+        return None
+
+    df = pd.DataFrame(rows)
+    df.insert(0, "chart_week_start", pd.Timestamp(week))
+    df.insert(0, "chart_type", chart_type)
+    return df
+
+# %%
+# ──────────────────────────────────────────────────────────────
+# Progress / resume helpers
+# ──────────────────────────────────────────────────────────────
+
+def already_scraped_weeks() -> set[tuple[str, str]]:
+    """Read existing CSV (if any) and return {(chart_type, ISO week‑start)}."""
+    if not CSV_PATH.exists():
+        return set()
+    df = pd.read_csv(CSV_PATH, usecols=["chart_type", "chart_week_start"])
+    return {(row.chart_type, row.chart_week_start) for row in df.itertuples()}
+
+
+def append_to_csv(df: pd.DataFrame) -> None:
+    header = not CSV_PATH.exists()
+    df.to_csv(CSV_PATH, mode="a", index=False, header=header, quoting=csv.QUOTE_MINIMAL)
+
+# %%
+# ──────────────────────────────────────────────────────────────
+# Main driver
+# ──────────────────────────────────────────────────────────────
+
+def main() -> None:
+    logging.info("="*20 + " Scraping Script Started " + "="*20) # Log script start
+    done = already_scraped_weeks()
+    logging.info(f"Checked existing CSV: Found {len(done)} week/chart combinations already scraped.")
+
+    for chart_type in ("singles", "albums"):
+        weeks = list(weekly_dates(START_DATE, END_DATE))
+        total = total_to_process
+        # print(f"\n→  Starting {chart_type.upper()}  ({total} weeks)")
+        logging.info(f"Starting {chart_type.upper()} chart scrape ({total} weeks total: {START_DATE} to {END_DATE})")
+
+        processed_count = 0
+        skipped_count = 0
+        weeks_to_process = [w for w in weeks if (chart_type, str(w)) not in done]
+        total_to_process = len(weeks_to_process)
+        logging.info(f"Need to process {total_to_process} weeks for {chart_type.upper()}.")
+
+
+        for i, week in enumerate(weeks_to_process, 1):
+            key = (chart_type, str(week))
+            if key in done:
+                continue
+
+            print(f"[{chart_type[0].upper()}] {week}  ({i}/{total}) … ", end="", flush=True)
+            # Log the attempt clearly
+            logging.debug(f"Attempting scrape: Type={chart_type}, Week={week}")
+
+            df = scrape_chart_for_week(chart_type, week)
+            if df is not None:
+                append_to_csv(df)
+                print(f"✓ {len(df)} rows")
+                logging.info(f"Success: Type={chart_type}, Week={week}, Rows={len(df)}")
+                processed_count += 1
+            else:
+                # Failure already logged within scrape_chart_for_week
+                print("✗ Failed/Skipped") # Indicate failure on console
+            time.sleep(random.uniform(*REQUEST_DELAY_RANGE))
+
+    # Log summary for the chart type
+        logging.info(f"Finished {chart_type.upper()} chart scrape. Processed this run: {processed_count}")
+
+
+    # Replace: print("\nAll done – dataset saved to", CSV_PATH.relative_to(Path.cwd()))
+    logging.info(f"Scraping complete for all requested charts and dates.")
+    logging.info(f"Dataset saved to: {CSV_PATH}")
+    logging.info("="*20 + " Scraping Script Finished " + "="*20)
+
+
+if __name__ == "__main__":
+    main()
+
+
