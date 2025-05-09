@@ -1,0 +1,7 @@
+2025-05-08 16:41:14,790 [INFO] ==================== Scraping Script Started ====================
+2025-05-08 16:41:49,730 [INFO] ==================== Scraping Script Started ====================
+2025-05-08 16:44:34,626 [INFO] ==================== Scraping Script Started ====================
+2025-05-08 16:44:34,626 [INFO] SINGLES  |  1979-12-31 → 2000-01-03  (1045 weeks still to fetch)
+2025-05-08 17:23:51,276 [INFO] ALBUMS  |  1979-12-31 → 2000-01-03  (1045 weeks still to fetch)
+2025-05-08 18:05:51,217 [INFO] Done. Dataset saved → C:\Users\astaub1\R_work\Research\music_data\data\raw_data\country_chart_data\de_charts_1980_2000.csv
+2025-05-08 18:05:51,217 [INFO] ==================== Scraping Script Finished ====================
