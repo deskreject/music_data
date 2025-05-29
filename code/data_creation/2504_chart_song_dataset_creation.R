@@ -76,6 +76,96 @@ france_songs_1984_2000 <- france_songs_1984_2000 %>%
 #save the dataframe as a .csv file under data/raw_data/country_chart_data
 write_csv(france_songs_1984_2000, here("data", "raw_data", "country_chart_data", "france_songs_1984_2000.csv"))
 
+# DE songs ---------
+
+#load in the data
+df_de_song_charts <- read_csv(here("data", "raw_data", "country_chart_data", "de_charts_1980_2000.csv"))
+
+#remove the "album" entries
+df_de_song_charts <- df_de_song_charts %>%
+  filter(chart_type == "singles")
+
+#create a column which is a concatenation of song_title and artist_name
+df_de_song_charts <- df_de_song_charts %>%
+  mutate(song_artist = paste(song_title, artist_name, sep = "_"))
+
+#deduplicate the dataframe based on the song_artist column
+df_de_song_charts <- df_de_song_charts %>%
+  distinct(song_artist, .keep_all = TRUE)
+
+#retain only the columns of relevance
+df_de_songs_1980_2000 <- df_de_song_charts %>%
+  dplyr::select(song_title, artist_name, country, song_artist, record_label)
+
+#rename the columns to make analysis streamlined
+df_de_songs_1980_2000 <- df_de_songs_1980_2000 %>%
+  rename(name_recording = song_title,
+         name_artist_credit = artist_name,
+         label = record_label)
+
+#save the dataframe as a .csv file under data/raw_data/country_chart_data
+write_csv(df_de_songs_1980_2000, here("data", "raw_data", "country_chart_data", "de_songs_1980_2000.csv"))
+
+# UK charts --------------
+
+#load in the data
+df_uk_charts <- read_csv(here("data", "raw_data", "country_chart_data", "uk_charts_1980_2000.csv"))
+
+#remove the "album" entries
+df_uk_charts <- df_uk_charts %>%
+  filter(chart_type == "singles")
+
+#create a column which is a concatenation of song_title and artist_name
+df_uk_charts <- df_uk_charts %>%
+  mutate(song_artist = paste(song_title, artist_name, sep = "_"))
+
+#deduplicate the dataframe based on the song_artist column
+df_uk_charts <- df_uk_charts %>%
+  distinct(song_artist, .keep_all = TRUE)
+
+#retain only the columns of relevance
+df_uk_songs_1980_2000 <- df_uk_charts %>%
+  dplyr::select(song_title, artist_name, song_artist) %>%
+  #add a column with NAs called label and a column called "country" with "uk"
+  mutate(label = NA,
+         country = "uk")
+
+#rename the columns to make analysis streamlined
+df_uk_songs_1980_2000 <- df_uk_songs_1980_2000 %>%
+  rename(name_recording = song_title,
+         name_artist_credit = artist_name)
+
+#save the dataframe as a .csv file under data/raw_data/country_chart_data
+write_csv(df_uk_songs_1980_2000, here("data", "raw_data", "country_chart_data", "uk_songs_1980_2000.csv"))
+
+# IT charts --------------
+
+#load in the data
+df_it_charts <- read_csv(here("data", "raw_data", "country_chart_data", "it_charts_1980_2000.csv"))
+
+# create a column which is a concatenation of song_title and artist_name
+df_it_charts <- df_it_charts %>%
+  mutate(song_artist = paste(song_title, artist_name, sep = "_"))
+
+#deduplicate the dataframe based on the song_artist column
+df_it_charts <- df_it_charts %>%
+  distinct(song_artist, .keep_all = TRUE)
+
+#retain only columns of relevance
+df_it_songs_1980_2000 <- df_it_charts %>%
+  dplyr::select(song_title, artist_name, song_artist) %>%
+  #add a column with NAs called label and a column called "country" with "it"
+  mutate(label = NA,
+         country = "it")
+
+#rename the columns to make analysis streamlined
+df_it_songs_1980_2000 <- df_it_songs_1980_2000 %>%
+  rename(name_recording = song_title,
+         name_artist_credit = artist_name)
+
+#save the dataframe as a .csv file under data/raw_data/country_chart_data
+write_csv(df_it_songs_1980_2000, here("data", "raw_data", "country_chart_data", "it_songs_1980_2000.csv"))
+
 # US charts (Whitburn project) -----------
 
 ## hot100
@@ -90,14 +180,62 @@ whitburn_hot100 <- read_excel(
 )
 
 #limit the years between 1980 and 2000
-#limit to the chart category "h" (hot100)
+#limit to the chart category "a" -> essentially hot100 for my time period (h only for a short time period)
 #create a field called song_artist that concatenates the song + artist
 whitburn_hot100_relevant <- whitburn_hot100 %>%
   filter(Year >= 1980, Year <= 2000) %>%
-  #filter(Source == h) %>%
+  filter(Source == "a") %>%
   mutate(song_artist = paste(Track, Artist, sep = "_"))
 
 #deduplicate based on the song + artist field
+whitburn_hot100_relevant <- whitburn_hot100_relevant %>%
+  distinct(song_artist, .keep_all = TRUE)
+
 
 #keep columns of relevance (year, artist, title, label)
 #add column "country" with "us"
+whitburn_hot100_relevant <- whitburn_hot100_relevant %>%
+  dplyr::select( name_artist_credit, name_recording, song_artist, "Label/Number") %>%
+  mutate(country = "us")
+
+#rename the columns to make analysis streamlined
+whitburn_hot100_relevant <- whitburn_hot100_relevant %>%
+  rename(label = "Label/Number")
+
+#save the dataframe as a .csv file under data/raw_data/country_chart_data
+write_csv(whitburn_hot100_relevant, here("data", "raw_data", "country_chart_data", "us_songs_1980_2000.csv"))
+
+## Checks of the data -------
+
+#Create a table of entries by year of the "source" variable
+
+source_counts <- whitburn_hot100 %>%
+  group_by(Source, Year) %>%
+  summarize(count = n())
+
+# Compiling all country specific data to single dataframe -----------
+
+#load all the dataframes of DE, FR, UK, IT, US
+df_de_songs_1980_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "de_songs_1980_2000.csv"))
+df_fr_songs_1984_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "france_songs_1984_2000.csv"))
+df_it_songs_1980_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "it_songs_1980_2000.csv"))
+df_uk_songs_1980_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "uk_songs_1980_2000.csv"))
+df_us_songs_1980_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "us_songs_1980_2000.csv"))
+
+#combine all dataframes into one
+df_all_songs_1980_2000 <- bind_rows(df_de_songs_1980_2000, df_fr_songs_1984_2000, df_it_songs_1980_2000, df_uk_songs_1980_2000, df_us_songs_1980_2000)
+
+#create trasnformed columns
+#tf_name_recording, tf_name_artist_credit, tf_artist_song
+#transformation makes all lower case and removes white space
+df_all_songs_1980_2000 <- df_all_songs_1980_2000 %>%
+  mutate(tf_name_recording = str_to_lower(name_recording),
+         tf_name_artist_credit = str_to_lower(name_artist_credit),
+         tf_artist_song = str_to_lower(paste(name_artist_credit, name_recording, sep = "_")))
+
+#remove any duplicates based on the tf_artist_song column
+df_all_songs_1980_2000_deduplicated <- df_all_songs_1980_2000 %>%
+  distinct(tf_artist_song, .keep_all = TRUE)
+
+#save the dataframe as a .csv file under data/raw_data/country_chart_data
+write_csv(df_all_songs_1980_2000_deduplicated, here("data", "raw_data", "country_chart_data", "all_charts_songs_1980_2000.csv"))
