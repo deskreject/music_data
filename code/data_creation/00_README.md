@@ -18,12 +18,22 @@ _2024_scratch_book: code for sanity checks from the panel creation - exploratory
 
 - musicbrainz_related/25_02_musicbrainz_song_cleaning: A script meant to break down the 11 million songs to unique, recording ID based observation devoid of songs taht don't have true record label and are not really musical pieces
 
-# chartmetric_api
-_song_metadata_spotify_comp: the code used to get the song metadata using the chartmetric ID including a extraction script to get certain variables from the json into a tabular form. 
+# ---- chartmetric_api -----
+
+
+## Chartmetric ID collection
+_access_spotify_id_vm_gemini_alternative: this is the script which preserves time by not saving a complete copy of the original dataset each time for the checkpoint file. However, it requires a merge of the charmetric ids back into the original database after everything has been done.
 _access_spotify_id_vm: using songs for which we have spotify characteristics, take their isrc code to request the chartmetric id - WU VM version
+
 _access_spotify_id: same as above, only locally tested and developed. Different file paths
 _access_trial: testing whether possible to get chartmetric ID from song names
 _song_metadata_spotify_comp: using the chartmetric IDs gathered from isrcs to collect song metadata
+
+## Chartmetric characteristics collection
+
+FOLDER chartmetric_characteristics_controller_worker: includes code that allows me to run multiple scripts in parallel to get the metdata from chartmetric to hit the api at a 3.5 requests per second limit
+
+_song_metadata_spotify_RETIRED: Old version of the code used to get the song metadata using the chartmetric ID including a extraction script to get certain variables from the json into a tabular form. Retired because too slow 
 
 ## additional
 

@@ -48,3 +48,6 @@ data/raw_data/
 #the spotify credentials
 code/data_creation/spotify_credentials.json
 code/data_creation/chartmetric_refresh_token.txt
+
+#chartmetric credentials
+code/data_creation/charmetric_characeristics_controller_worker/chartmetric_refresh_token.txt
