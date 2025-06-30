@@ -195,15 +195,18 @@ whitburn_hot100_relevant <- whitburn_hot100_relevant %>%
 #keep columns of relevance (year, artist, title, label)
 #add column "country" with "us"
 whitburn_hot100_relevant <- whitburn_hot100_relevant %>%
-  dplyr::select( name_artist_credit, name_recording, song_artist, "Label/Number") %>%
+  dplyr::select( Artist, Track, song_artist, "Label/Number") %>%
   mutate(country = "us")
 
 #rename the columns to make analysis streamlined
 whitburn_hot100_relevant <- whitburn_hot100_relevant %>%
-  rename(label = "Label/Number")
+  rename(label = "Label/Number",
+         name_artist_credit = Artist,
+         name_recording = Track
+)
 
 #save the dataframe as a .csv file under data/raw_data/country_chart_data
-write_csv(whitburn_hot100_relevant, here("data", "raw_data", "country_chart_data", "us_songs_1980_2000.csv"))
+write_csv(whitburn_hot100_relevant, here("data", "raw_data", "country_chart_data", "us_BB_songs_1980_2000.csv"))
 
 ## Checks of the data -------
 
@@ -213,6 +216,47 @@ source_counts <- whitburn_hot100 %>%
   group_by(Source, Year) %>%
   summarize(count = n())
 
+
+# US charts (Cashbox charts) -----------
+
+#packages
+library(readxl)
+
+#load the data
+cashbox_pop <- read_excel(
+  path = here("data", "raw_data", "whitburn", "Cash Box Pop Charts (1944-1996).xlsx"),
+  sheet = 1,
+  range = cell_cols("B:S")
+)
+
+#transform the "Date Entered" variable from a string to a date format, currently as "YYYY-MM-DD"
+cashbox_pop <- cashbox_pop %>%
+  mutate(Date_Entered = as.Date(`Date Entered`, format = "%Y-%m-%d"))
+
+#limit the years between 1980 and 2000 and create the song_artist deduplication column
+cashbox_pop_relevant <- cashbox_pop %>%
+  filter(Date_Entered >= "1980-01-01", Date_Entered <= "2000-01-01") %>%
+  mutate(song_artist = paste(`Song Title`, `Artist (as appears on Label)`, sep = "_"))
+
+#deduplicate based on the song + artist field
+cashbox_pop_relevant <- cashbox_pop_relevant %>%
+  distinct(song_artist, .keep_all = TRUE)
+
+#keep the variables: Song Title, Artist, Label, Year (extracted from Date Entered)
+cashbox_pop_unique <- cashbox_pop_relevant %>%
+  mutate(Year = year(Date_Entered)) %>%
+  dplyr::select(`Song Title`, `Artist (as appears on Label)`, `Label/Number`, song_artist) %>%
+  mutate(country = "us")
+
+#rename the columns so they match those of the previous dataframes
+cashbox_pop_unique <- cashbox_pop_unique %>%
+  rename(name_recording = `Song Title`,
+         name_artist_credit = `Artist (as appears on Label)`,
+         label = `Label/Number`)
+
+#save the dataframe as a .csv file under data/raw_data/country_chart_data
+write_csv(cashbox_pop_unique, here("data", "raw_data", "country_chart_data", "us_CB_songs_1980_2000.csv"))
+
 # Compiling all country specific data to single dataframe -----------
 
 #load all the dataframes of DE, FR, UK, IT, US
@@ -221,9 +265,15 @@ df_fr_songs_1984_2000 <- read_csv(here("data", "raw_data", "country_chart_data",
 df_it_songs_1980_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "it_songs_1980_2000.csv"))
 df_uk_songs_1980_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "uk_songs_1980_2000.csv"))
 df_us_songs_1980_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "us_songs_1980_2000.csv"))
+df_us_CB_songs_1980_2000 <- read_csv(here("data", "raw_data", "country_chart_data", "us_CB_songs_1980_2000.csv"))
 
 #combine all dataframes into one
-df_all_songs_1980_2000 <- bind_rows(df_de_songs_1980_2000, df_fr_songs_1984_2000, df_it_songs_1980_2000, df_uk_songs_1980_2000, df_us_songs_1980_2000)
+df_all_songs_1980_2000 <- bind_rows(df_de_songs_1980_2000,
+   df_fr_songs_1984_2000, 
+   df_it_songs_1980_2000, 
+   df_uk_songs_1980_2000, 
+   df_us_songs_1980_2000,
+   df_us_CB_songs_1980_2000)
 
 #create trasnformed columns
 #tf_name_recording, tf_name_artist_credit, tf_artist_song
