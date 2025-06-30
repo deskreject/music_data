@@ -22,6 +22,6 @@ in the separate anaconda prompts
 The log files are saved in the working directory by worker
 - I can delete the log files after I am done with one run to reset it
 
-## STEP 3 (Untested at time of writing this)
+## STEP 3 
 
 run the script "99_" to merge the data
