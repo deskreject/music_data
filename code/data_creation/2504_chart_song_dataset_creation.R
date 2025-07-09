@@ -67,6 +67,8 @@ df_christian_france_deduplicated <- df_christian_france %>%
 france_songs_1984_2000 <- df_christian_france_deduplicated %>%
   dplyr::select(title, artist, scountry, artist_song, label)
 
+
+
 #rename the columns to make analysis streamlined
 france_songs_1984_2000 <- france_songs_1984_2000 %>%
   rename(name_recording = title,
@@ -101,7 +103,8 @@ df_de_songs_1980_2000 <- df_de_song_charts %>%
 df_de_songs_1980_2000 <- df_de_songs_1980_2000 %>%
   rename(name_recording = song_title,
          name_artist_credit = artist_name,
-         label = record_label)
+         label = record_label) %>%
+  mutate(country = "de")
 
 #save the dataframe as a .csv file under data/raw_data/country_chart_data
 write_csv(df_de_songs_1980_2000, here("data", "raw_data", "country_chart_data", "de_songs_1980_2000.csv"))
