@@ -1,0 +1,16 @@
+name: music_data_chartmetric
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - jupyter
+  - pandas
+  - future
+  - bs4
+  - tenacity
+  - typing
+  - pathlib
+  - tqdm
+  - lxml
+prefix: C:\Users\astaub1\AppData\Local\anaconda3\envs\music_data_chartmetric

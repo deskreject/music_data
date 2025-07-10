@@ -1,0 +1,16 @@
+# Description
+
+cleaned csv from the file G:\My Drive\Music project\readings\industry_reports
+
+includes 2 columns:
+- label names
+- codes:
+-- 1 major
+-- 0 Indie
+-- 3 disney
+-- 2 mixed/legacy
+-- NA not coded
+
+# Necessary transformations:
+- removing trailing white spaces
+- removing special characters (forward slashes etc)

@@ -2,6 +2,9 @@
 .Rhistory
 .Rapp.history
 
+#sh files
+*.sh
+
 # Session Data files
 .RData
 
@@ -42,8 +45,52 @@ vignettes/*.pdf
 *.env
 *.ini
 
+#ignore any data files of within the folder data/raw_data (json, csv, pkl, excel files of any format etc.)
+data/raw_data/**/*.json
+data/raw_data/**/*.csv
+data/raw_data/**/*.pkl
+data/raw_data/**/*.xlsx
+data/raw_data/**/*.xls
+data/raw_data/**/*.xlsm
+data/raw_data/**/*.xlsb
+data/raw_data/**/*.xlsb
+data/raw_data/**/*.xlsm
+data/raw_data/**/*.tsv
+data/raw_data/**/*.feather
+data/raw_data/**/*.parquet
+data/raw_data/**/*.hdf5
+data/raw_data/**/*.h5
+data/raw_data/**/*.dta
+data/raw_data/**/*.sav
+data/raw_data/**/*.rds
+data/raw_data/**/*.rda
+data/raw_data/**/*.rdata
+data/raw_data/**/*.zip
+data/raw_data/**/*.tar
+data/raw_data/**/*.tar.gz
+data/raw_data/**/*.tar.zst
+data/raw_data/**/*.tar.bz2
+data/raw_data/**/*.tar.xz
+data/raw_data/**/*.gz
+data/raw_data/**/*.bz2
+data/raw_data/**/*.xz
+data/raw_data/**/*.jsonl
+data/raw_data/**/*.pickle
+data/raw_data/**/*.pkl.gz
+data/raw_data/**/*.pkl.bz2
+data/raw_data/**/*.pkl.xz
+data/raw_data/**/*.feather
+data/raw_data/**/*.parq
+data/raw_data/**/*.feather
+data/raw_data/**/*.parquet
+data/raw_data/**/*.txt
+data/raw_data/**/*.rar 
+data/raw_data/**/*.cache
+
+
+
 #large data files
-data/raw_data/
+#data/raw_data/
 
 #the spotify credentials
 code/data_creation/spotify_credentials.json
