@@ -86,7 +86,7 @@ data/raw_data/**/*.parquet
 data/raw_data/**/*.txt
 data/raw_data/**/*.rar 
 data/raw_data/**/*.cache
-
+data/raw_data/**/*.xml
 
 
 #large data files
