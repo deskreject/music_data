@@ -2,6 +2,11 @@
 
 This folder contains scripts that are meant to hit the chartmetrics api simultaneously, then merge the separate "checkpoint" files
 
+## CAUTION 01 and 02:
+
+These scripts were created to switch to batch checkpoint saving as single file checkpoint saving was causing issues due to the resulting json file size.
+Led the script to crash and having to restart with the batch based checkpoint logic - currently each checkpoint batch is saved for 1000 records retreived in the "response" folder 
+
 ## STEP 1
 
 I need to run the 00_chartmetric controller script once
@@ -24,4 +29,8 @@ The log files are saved in the working directory by worker
 
 ## STEP 3 
 
+Check the sizes of the json - they might be extremely large, at which stage I may have to adjust the code
+
 run the script "99_" to merge the data
+
+
