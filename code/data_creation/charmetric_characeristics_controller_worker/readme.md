@@ -31,6 +31,9 @@ The log files are saved in the working directory by worker
 
 Check the sizes of the json - they might be extremely large, at which stage I may have to adjust the code
 
-run the script "99_" to merge the data
+run the script "99_.._improved" to merge the data:
+- improved because the original would save the entire json to memory before processing - which would explode the RAM and force vscode to quit
+- the new script "streams" the data - i.e. loads in and processes it in batches. 
+
 
 
