@@ -39,8 +39,8 @@ cashbox_pop <- read_excel(
 
 whitburn_hot100 <- read_excel(
   path = here("data", "raw_data", "whitburn", "Billboard Pop ME (1890-2015) 20150328.xls"),
-  sheet = 2,
-  range = cell_cols("A:Y")
+  sheet = 2
+  #range = cell_cols("A:Y")
 )
 
 # Data wrangling: Cashbox charts ------------------------------------------------------------------------------- 
@@ -86,7 +86,7 @@ chart_data <- cashbox_pop_charts_relevant %>%
 # PIVOT: Transform from wide to long format
 # values_drop_na = TRUE will automatically handle the sparse data
 # (removes all the NA values from weeks when songs weren't charting)
-long_data <- chart_data %>%
+long_data_cashbox <- chart_data %>%
   pivot_longer(
     cols = matches("^\\d+(st|nd|rd|th)$"),  # Selects: 1st, 2nd, 3rd, ..., 55th
     names_to = "week_number",
@@ -103,9 +103,11 @@ long_data <- chart_data %>%
   select(
     chart_week,
     chart_position,
-    Song.Title,
-    Artist..as.appears.on.Label.,
+    name_recording,
+    name_artist_credit,
     Date.Entered,
+    label,
+    country,
     week_num,
     everything(),
     -week_number
@@ -117,18 +119,112 @@ cat("Total song-week entries:", nrow(long_data), "\n")
 cat("Date range:", format(min(long_data$chart_week, na.rm = TRUE), "%Y-%m-%d"), 
     "to", format(max(long_data$chart_week, na.rm = TRUE), "%Y-%m-%d"), "\n\n")
 
+#=====================================
+# Data wrangling: Billboard charts -----------------------------------------------
+#=====================================
+
+#transform the "Date Entered" variable from a string to a date format, currently as "YYYY-MM-DD"
+billboard_charts <- whitburn_hot100 %>%
+  mutate(Date_Entered = as.Date(`Date Entered`, format = "%Y-%m-%d"))
+
+#limit the years between 1980 and 2000 and create the song_artist deduplication column
+billboard_charts_relevant <- billboard_charts %>%
+  filter(Date_Entered >= "1980-01-01", Date_Entered <= "2000-01-01",
+         Source == "a")
+
+#save a df with the variables for the chart positioning
+billboard_charts_pos <- billboard_charts_relevant[35:125] 
+
+#transform all values of all columne of the _pos dataframe to strings
+billboard_charts_pos <- billboard_charts_pos %>% mutate(across(everything(), as.integer))
+
+
+
+#save the relevant variables:
+billboard_charts_vars <- billboard_charts_relevant %>%
+  dplyr::select(Date_Entered,
+  Track,
+  Artist,
+`Label/Number`) %>%
+  # change the names of the columns to match the key up top
+  rename(name_recording = Track,
+         name_artist_credit = Artist,
+         label = `Label/Number`) %>%
+  #add the country column
+  mutate(country = "us_bb")
+
+#columnbind the vars and pos dataset
+billboard_relevant <- bind_cols(billboard_charts_vars, billboard_charts_pos)
+
+#==============================================
+# Billboard Charts pivot longer
+#==============================================
+
+
+# PIVOT: Transform from wide to long format
+# NOTE: Billboard columns are "1st Week", "2nd Week", etc. (with "Week" suffix)
+long_data_billboard <- billboard_relevant %>%
+  pivot_longer(
+    cols = matches("^\\d+(st|nd|rd|th) Week$"),  # Matches: 1st Week, 2nd Week, etc.
+    names_to = "week_number",
+    values_to = "chart_position",
+    values_drop_na = TRUE  # KEY: Removes all NA values efficiently
+  ) %>%
+  # Extract week number and calculate chart week date
+  mutate(
+    # Extract just the number from "1st Week", "2nd Week", etc.
+    week_num = parse_number(week_number),
+    # Chart week = Date_Entered + (week number - 1) weeks
+    chart_week = Date_Entered + weeks(week_num - 1)
+  ) %>%
+  # Clean up and reorder columns
+  select(
+    chart_week,
+    chart_position,
+    name_recording,
+    name_artist_credit,
+    label,
+    country,
+    Date_Entered,
+    week_num,
+    everything(),
+    -week_number
+  ) %>%
+  arrange(chart_week, chart_position)
+
+cat("=== POST-PIVOT DATA INFO ===\n")
+cat("Total song-week entries:", nrow(long_data), "\n")
+cat("Date range:", format(min(long_data$chart_week, na.rm = TRUE), "%Y-%m-%d"), 
+    "to", format(max(long_data$chart_week, na.rm = TRUE), "%Y-%m-%d"), "\n\n")
+
+#=============================================
+# Saving the dataframes ------------------------------------------------------------
+#=============================================
+
+#cashbox to the shared drive
+write.csv(long_data_cashbox, "//bigdata.wu.ac.at/delpero/Data_alexander/data/raw_data/country_chart_data/us_CB_songs_1980_2000_weekly.csv")
+#cashbox locally
+write.csv(long_data_cashbox, here::here("data", "raw_data", "country_chart_data", "us_CB_songs_1980_2000_weekly.csv"))
+
+# billboard to shared drive
+write.csv(long_data_billboard, "//bigdata.wu.ac.at/delpero/Data_alexander/data/raw_data/country_chart_data/us_BB_songs_1980_2000_weekly.csv")
+#billboard locally
+write.csv(long_data_billboard, here::here("data", "raw_data", "country_chart_data", "us_BB_songs_1980_2000_weekly.csv"))
+
+
+
 # ============================================
-# DATA VALIDATION CHECKS
+# Cashbox: DATA VALIDATION CHECKS --------------------------------------------------
 # ============================================
 
 cat("=== DATA VALIDATION ===\n\n")
 
 # Check 1: Identify weeks with duplicate chart positions
-duplicates <- long_data %>%
+duplicates <- long_data_cashbox %>%
   group_by(chart_week, chart_position) %>%
   filter(n() > 1) %>%
   arrange(chart_week, chart_position) %>%
-  select(chart_week, chart_position, Song.Title, Artist..as.appears.on.Label.)
+  select(chart_week, chart_position, name_recording, name_artist_credit)
 
 if (nrow(duplicates) > 0) {
   cat("⚠️  WARNING: Found", nrow(duplicates) / 2, "cases of duplicate positions:\n")
@@ -140,7 +236,7 @@ if (nrow(duplicates) > 0) {
 
 # Check 2: Identify weeks with gaps in chart positions
 # For each week, check if positions are consecutive starting from 1
-gaps <- long_data %>%
+gaps <- long_data_cashbox %>%
   group_by(chart_week) %>%
   summarise(
     positions = list(sort(unique(chart_position))),
@@ -162,7 +258,7 @@ if (nrow(gaps) > 0) {
 }
 
 # Check 3: Chart completeness by week
-weekly_summary <- long_data %>%
+weekly_summary <- long_data_cashbox %>%
   group_by(chart_week) %>%
   summarise(
     n_songs = n(),
@@ -179,8 +275,8 @@ cat("Songs per week - Min:", min(weekly_summary$n_songs),
 cat("Highest chart position range: 1 to", max(weekly_summary$max_position), "\n")
 
 # Check 4: Songs with unusually long chart runs
-long_runners <- long_data %>%
-  group_by(Song.Title, Artist..as.appears.on.Label., Date.Entered) %>%
+long_runners <- long_data_cashbox %>%
+  group_by(name_recording, name_artist_credit, Date.Entered) %>%
   summarise(
     weeks_on_chart = n(),
     peak_position = min(chart_position),
@@ -195,7 +291,7 @@ if (nrow(long_runners) > 0) {
 }
 
 # Check 5: Missing or invalid dates
-missing_dates <- sum(is.na(long_data$chart_week))
+missing_dates <- sum(is.na(long_data_cashbox$chart_week))
 if (missing_dates > 0) {
   cat("\n⚠️  WARNING:", missing_dates, "rows have missing chart_week dates\n")
 } else {
@@ -204,6 +300,81 @@ if (missing_dates > 0) {
 
 
 
+# ============================================
+# Billboard: DATA VALIDATION CHECKS --------------------------------------------------
+# ============================================
+
+# Check 1: Identify weeks with duplicate chart positions
+duplicates <- long_data_billboard %>%
+  group_by(chart_week, chart_position) %>%
+  filter(n() > 1) %>%
+  arrange(chart_week, chart_position) %>%
+  select(chart_week, chart_position, name_recording, name_artist_credit)
+
+if (nrow(duplicates) > 0) {
+  cat("⚠️  WARNING: Found", nrow(duplicates) / 2, "cases of duplicate positions:\n")
+  print(duplicates, n = 20)
+  cat("\n")
+}
+
+# Check 2: Identify weeks with gaps in chart positions
+# For each week, check if positions are consecutive
+gaps <- long_data_billboard %>%
+  group_by(chart_week) %>%
+  summarise(
+    positions = list(sort(unique(chart_position))),
+    min_pos = min(chart_position),
+    max_pos = max(chart_position),
+    n_positions = n_distinct(chart_position),
+    expected_positions = max_pos - min_pos + 1,
+    has_gap = n_positions < expected_positions,
+    .groups = "drop"
+  ) %>%
+  filter(has_gap)
+
+if (nrow(gaps) > 0) {
+  cat("⚠️  WARNING: Found", nrow(gaps), "weeks with missing chart positions (gaps):\n")
+  print(gaps %>% select(chart_week, min_pos, max_pos, n_positions, expected_positions), n = 20)
+  cat("\n")
+}
+
+# Check 3: Chart completeness by week
+weekly_summary <- long_data_billboard %>%
+  group_by(chart_week) %>%
+  summarise(
+    n_songs = n(),
+    min_position = min(chart_position),
+    max_position = max(chart_position),
+    .groups = "drop"
+  )
+
+cat("\n=== WEEKLY CHART SUMMARY ===\n")
+cat("Total unique weeks:", nrow(weekly_summary), "\n")
+cat("Songs per week - Min:", min(weekly_summary$n_songs), 
+    "Max:", max(weekly_summary$n_songs),
+    "Mean:", round(mean(weekly_summary$n_songs), 1), "\n")
+cat("Highest chart position range: 1 to", max(weekly_summary$max_position), "\n")
+
+# Show some examples of weekly totals
+cat("\nSample weekly song counts:\n")
+print(head(weekly_summary %>% arrange(chart_week) %>% 
+           select(chart_week, n_songs, min_position, max_position), 10))
+
+# Check 4: Songs with unusually long chart runs
+long_runners <- long_data_billboard %>%
+  group_by(name_recording, name_artist_credit, Date_Entered) %>%
+  summarise(
+    weeks_on_chart = n(),
+    peak_position = min(chart_position),
+    .groups = "drop"
+  ) %>%
+  filter(weeks_on_chart > 40) %>%
+  arrange(desc(weeks_on_chart))
+
+if (nrow(long_runners) > 0) {
+  cat("\n=== SONGS WITH 40+ WEEKS ON CHART ===\n")
+  print(long_runners, n = 15)
+}
 
 
   
